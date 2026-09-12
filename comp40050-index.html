@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Computer Architecture &amp; Operating Systems Design — Index</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@300;400;500;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --blue:#8ab4f8; --red:#f28b82; --yellow:#fdd663; --green:#81c995; --purple:#c58af9;
+    --ink:#e8eaed; --sub:#9aa0a6; --paper:#232427; --bg:#131417; --line:#3c4043;
+    --card-shadow: 0 1px 2px rgba(0,0,0,.5), 0 2px 10px rgba(0,0,0,.4);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{ margin:0; font-family:'Roboto', Arial, sans-serif; background:var(--bg); color:var(--ink); line-height:1.6; overflow-x:hidden; }
+  h1,h2,.g-title{ font-family:'Google Sans','Roboto',Arial,sans-serif; }
+
+  .hero{ background:linear-gradient(120deg,#1a73e8 0%, #7B61FF 45%, #EA4335 100%); color:#fff; padding:56px 24px 40px; position:relative; overflow:hidden; }
+  .hero::after{ content:""; position:absolute; right:-60px; top:-60px; width:280px;height:280px;border-radius:50%; background:rgba(255,255,255,.08); }
+  .hero::before{ content:""; position:absolute; left:8%; bottom:-120px; width:220px;height:220px;border-radius:50%; background:rgba(255,255,255,.07); }
+  .hero-inner{max-width:1100px;margin:0 auto;position:relative;z-index:1;}
+  .eyebrow{ display:inline-block; font-size:12px; letter-spacing:.14em; text-transform:uppercase; background:rgba(255,255,255,.18); padding:6px 12px; border-radius:20px; margin-bottom:18px; font-weight:500; }
+  .hero h1{font-size:30px; margin:0 0 12px; font-weight:700; line-height: 1.25;}
+  .hero p{font-size:16px; max-width:760px; opacity:.95; margin:0;}
+  .breadcrumb{ font-size:13px; opacity:.9; margin-bottom:16px; }
+  .breadcrumb a{ color:#fff; text-decoration:none; opacity:.85; }
+  .breadcrumb a:hover{ text-decoration:underline; opacity:1; }
+  .breadcrumb .sep{ margin:0 8px; opacity:.6; }
+
+  .site-search{ margin-top:24px; max-width:440px; position:relative; }
+  .site-search input{
+    width:100%; padding:13px 16px 13px 44px; border-radius:14px;
+    border:1px solid rgba(255,255,255,.32); background:rgba(255,255,255,.14);
+    color:#fff; font-size:14.5px; backdrop-filter:blur(6px); box-sizing:border-box;
+  }
+  .site-search input::placeholder{ color:rgba(255,255,255,.78); }
+  .site-search input:focus{ outline:none; background:rgba(255,255,255,.22); border-color:#fff; }
+  .site-search .s-icon{
+    position:absolute; left:15px; top:50%; transform:translateY(-50%);
+    font-size:14px; opacity:.85; pointer-events:none;
+  }
+  .site-search .s-clear{
+    position:absolute; right:8px; top:50%; transform:translateY(-50%);
+    width:26px; height:26px; border-radius:8px; border:none; background:rgba(255,255,255,.16);
+    color:#fff; font-size:13px; cursor:pointer; display:none; align-items:center; justify-content:center;
+  }
+  .site-search.has-query .s-clear{ display:flex; }
+
+  .no-results{
+    display:none; text-align:center; padding:40px 20px; color:var(--sub);
+    background:var(--paper); border-radius:18px; box-shadow:var(--card-shadow); margin-bottom:22px;
+  }
+  .no-results.show{ display:block; }
+  .no-results .nr-title{ font-family:'Google Sans',sans-serif; font-weight:700; color:var(--ink); font-size:16px; margin-bottom:6px; }
+
+  .group{ background:var(--paper); border-radius:18px; box-shadow:var(--card-shadow); padding:26px 30px; margin-bottom:22px; scroll-margin-top:20px; }
+  .group-head{ display:flex; align-items:center; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
+  .group-head .num-badge{ width:30px; height:30px; border-radius:9px; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:14px; font-family:'Google Sans',sans-serif; flex:none; line-height:1; }
+  .group h2{ font-size:21px; margin:0; font-weight:700; line-height:1.3; }
+  .group .g-range{ font-size:12px; color:var(--sub); margin-left:auto; white-space:nowrap; }
+
+  .topic-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+  .topic-link{
+    display:flex; align-items:center; gap:10px; text-decoration:none; color:var(--ink);
+    background:#1a1b1e; border:1px solid var(--line); border-radius:10px; padding:11px 14px;
+    font-size:13.5px; transition:background .15s ease, border-color .15s ease, transform .1s ease;
+  }
+  .topic-link:hover{ background:#26282c; border-color:#4a4d52; transform:translateX(2px); }
+  .topic-link .t-num{
+    font-family:'Roboto Mono',monospace; font-size:11.5px; color:var(--sub); flex:none;
+    background:#2c2d30; border-radius:6px; padding:2px 6px; min-width:26px; text-align:center;
+  }
+
+  .empty-state{
+    background:#1a1b1e; border:1px dashed var(--line); border-radius:14px; padding:26px 22px;
+    text-align:center; color:var(--sub); font-size:13.5px;
+  }
+  .empty-state .es-icon{ font-size:26px; margin-bottom:10px; }
+  .empty-state .es-title{ font-family:'Google Sans',sans-serif; color:var(--ink); font-weight:700; font-size:14.5px; margin-bottom:6px; }
+
+  footer{ text-align:center; color:var(--sub); font-size:12.5px; padding:20px 0 50px; }
+  .back-top{ display:inline-block; margin-top:10px; font-size:12px; color:var(--blue); text-decoration:none; }
+  .back-top:hover{ text-decoration:underline; opacity:.8; }
+
+  @media (max-width:900px){
+    .hero{padding:44px 20px 70px;} .hero h1{font-size:24px;} .hero p{font-size:15px;}
+    .group{padding:20px 18px;}
+    .topic-grid{grid-template-columns:1fr 1fr;}
+  }
+  @media (max-width:560px){
+    .hero{padding:36px 18px 60px;} .hero h1{font-size:20px;} .hero p{font-size:14px;}
+    .eyebrow{font-size:10.5px; padding:5px 10px;}
+    .group{padding:16px 14px; border-radius:14px;}
+    .group-head{flex-wrap:wrap;}
+    .group h2{font-size:16.5px;}
+    .group .g-range{ margin-left:0; width:100%; }
+    .topic-grid{grid-template-columns:1fr;}
+    .topic-link{padding:10px 12px; font-size:13px;}
+  }
+
+  /* ===== Mobile bar ===== */
+  .mobile-bar{ display:none; position:sticky; top:0; z-index:40; align-items:center; justify-content:space-between; background:var(--paper); border-bottom:1px solid var(--line); padding:12px 16px; }
+  .mobile-bar .m-title{ font-family:'Google Sans',sans-serif; font-weight:700; font-size:14.5px; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .menu-btn{ display:flex; align-items:center; justify-content:center; width:38px; height:38px; border-radius:10px; border:1px solid var(--line); background:var(--paper); flex:none; cursor:pointer; padding:0; }
+  .menu-btn span, .menu-btn span::before, .menu-btn span::after{ content:""; display:block; width:18px; height:2px; background:var(--ink); position:relative; transition:transform .2s ease, opacity .2s ease; }
+  .menu-btn span::before{ position:absolute; top:-6px; } .menu-btn span::after{ position:absolute; top:6px; }
+  .menu-btn[aria-expanded="true"] span{ background:transparent; }
+  .menu-btn[aria-expanded="true"] span::before{ top:0; transform:rotate(45deg); background:var(--ink); }
+  .menu-btn[aria-expanded="true"] span::after{ top:0; transform:rotate(-45deg); background:var(--ink); }
+  .toc-backdrop{ display:none; position:fixed; inset:0; background:rgba(32,33,36,.45); z-index:45; }
+  .toc-backdrop.show{ display:block; }
+  .drawer-close{ display:none; width:30px; height:30px; border-radius:8px; border:1px solid var(--line); background:var(--paper); align-items:center; justify-content:center; cursor:pointer; font-size:16px; line-height:1; color:var(--sub); flex:none; }
+  nav.toc.drawer-open .drawer-close{ display:flex; }
+  @keyframes slideIn{ from{ transform:translateX(-100%); opacity:.4; } to{ transform:translateX(0); opacity:1; } }
+
+  /* ===== Layout: sidebar + main ===== */
+  .idx-layout{ max-width:1180px; margin:-8px auto 0; padding:0 24px; display:grid; grid-template-columns:250px 1fr; gap:32px; align-items:start; }
+  .idx-layout main{ min-width:0; }
+
+  /* ===== Sidebar nav.toc ===== */
+  nav.toc{ background:var(--paper); border-radius:16px; box-shadow:var(--card-shadow); padding:18px 10px; position:sticky; top:20px; max-height:calc(100vh - 40px); overflow:auto; }
+  nav.toc .toc-head{ font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--sub); padding:6px 14px 10px; font-weight:500; display:flex; align-items:center; justify-content:space-between; }
+  nav.toc a{ display:block; padding:9px 14px; border-radius:10px; color:var(--ink); text-decoration:none; font-size:13.5px; border-left:3px solid transparent; }
+  nav.toc a:hover{ background:#2c2d30; }
+  nav.toc a.active{ background:#2a3a55; color:#a8c7fa; border-left-color:var(--blue); font-weight:500; }
+
+  /* ===== Responsive ===== */
+  @media (max-width:900px){
+    .idx-layout{ grid-template-columns:1fr; margin-top:20px; padding:0 16px; }
+    .mobile-bar{ display:flex; }
+    nav.toc{ display:none; }
+    nav.toc.drawer-open{ display:block; position:fixed; top:0; left:0; bottom:0; z-index:50; width:82%; max-width:320px; max-height:none; border-radius:0; box-shadow:2px 0 24px rgba(0,0,0,.18); padding:18px 8px 24px; animation:slideIn .22s ease; overflow:auto; }
+    nav.toc.drawer-open .toc-head{ padding:8px 16px 14px; }
+    nav.toc a{ padding:12px 16px; font-size:14.5px; }
+  }
+  @media (max-width:400px){ nav.toc.drawer-open{ width:88%; } }
+</style>
+</head>
+<body>
+
+<div class="mobile-bar" id="mobileBar">
+  <span class="m-title">Computer Architecture &amp; OS Design</span>
+  <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="toc" aria-label="Open topics menu">
+    <span></span>
+  </button>
+</div>
+<div class="toc-backdrop" id="tocBackdrop"></div>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="breadcrumb"><a href="index.html">Study Notes — Main Index</a><span class="sep">/</span>Computer Architecture &amp; OS Design</div>
+    <span class="eyebrow">COMP40050 · Year 1, Semester 1</span>
+    <h1>Computer Architecture &amp; Operating Systems Design</h1>
+    <p>This module covers two distinct areas — <b>Computer Architecture</b> (hardware fundamentals, from number systems to emerging technologies) and <b>Operating Systems Design</b> (Linux administration). Pick an area below to see its topics.</p>
+    <div class="site-search" id="siteSearch">
+      <span class="s-icon">🔍</span>
+      <input type="text" id="topicSearch" placeholder="Search topics… e.g. floating point, GPU, Linux" autocomplete="off">
+      <button class="s-clear" id="searchClear" aria-label="Clear search">✕</button>
+    </div>
+  </div>
+</div>
+
+<div class="idx-layout">
+  <nav class="toc" id="toc">
+    <div class="toc-head">On this page <button class="drawer-close" id="drawerClose" aria-label="Close menu">✕</button></div>
+    <a href="#group-1">1. 🧮 Computer Architecture</a>
+    <a href="#group-2">2. 🐧 Operating Systems Design</a>
+  </nav>
+  <main>
+  <div class="wrap-idx" style="padding-bottom:60px;">
+  <div class="no-results" id="noResults">
+    <div class="nr-title">No topics match your search</div>
+    <div>Try a different keyword, or clear the search to see all topics.</div>
+  </div>
+
+  <div class="group" id="group-1">
+    <div class="group-head">
+      <div class="num-badge" style="background:#4285F4">1</div>
+      <h2>🧮 Computer Architecture</h2>
+      <span class="g-range">7 topics</span>
+    </div>
+    <div class="topic-grid">
+      <a class="topic-link" href="01-number-system-conversion.html"><span class="t-num">01</span> Number System Conversion</a>
+      <a class="topic-link" href="02-floating-point-representation.html"><span class="t-num">02</span> Floating Point Data Representation</a>
+      <a class="topic-link" href="03-cpu-architecture-instruction-cycle.html"><span class="t-num">03</span> CPU Architecture &amp; Instruction Cycle</a>
+      <a class="topic-link" href="04-logic-gates-memory-management.html"><span class="t-num">04</span> Logic Gates &amp; Memory Management</a>
+      <a class="topic-link" href="05-storage-devices.html"><span class="t-num">05</span> Storage Devices</a>
+      <a class="topic-link" href="06-display-technologies-gpu-architecture.html"><span class="t-num">06</span> Display Technologies &amp; GPU Architecture</a>
+      <a class="topic-link" href="07-emerging-technologies.html"><span class="t-num">07</span> Emerging Technologies</a>
+    </div>
+  </div>
+
+  <div class="group" id="group-2">
+    <div class="group-head">
+      <div class="num-badge" style="background:#F09300">2</div>
+      <h2>🐧 Operating Systems Design</h2>
+      <span class="g-range">Linux Administration</span>
+    </div>
+    <div class="empty-state">
+      <div class="es-icon">🚧</div>
+      <div class="es-title">Topics not added yet</div>
+      <div>Upload the Linux Administration slides for this half of the module and this section will be built out the same way as Computer Architecture.</div>
+    </div>
+  </div>
+
+  </div><!-- /.wrap-idx -->
+  </main>
+</div><!-- /.idx-layout -->
+
+<footer>Computer Architecture &amp; Operating Systems Design — Neroshana Gunasekara · COMP40050
+  <br><a class="back-top" href="#toc">Back to top ↑</a>
+</footer>
+
+<script>
+
+  // ===== TOC scroll-spy =====
+  const idxSections = document.querySelectorAll('.group[id]');
+  const idxTocLinks = document.querySelectorAll('nav.toc a[href^="#"]');
+  const idxTocMap = {};
+  idxTocLinks.forEach(l => idxTocMap[l.getAttribute('href').slice(1)] = l);
+
+  const idxObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if(entry.isIntersecting){
+        const id = entry.target.getAttribute('id');
+        idxTocLinks.forEach(l => l.classList.remove('active'));
+        if(idxTocMap[id]) idxTocMap[id].classList.add('active');
+      }
+    });
+  }, { rootMargin: '-15% 0px -70% 0px', threshold: 0 });
+  idxSections.forEach(s => idxObserver.observe(s));
+
+  window.addEventListener('scroll', () => {
+    const scrollBottom = window.scrollY + window.innerHeight;
+    if(scrollBottom >= document.documentElement.scrollHeight - 60){
+      const lastLink = idxTocLinks[idxTocLinks.length - 1];
+      if(lastLink && !lastLink.classList.contains('active')){
+        idxTocLinks.forEach(l => l.classList.remove('active'));
+        lastLink.classList.add('active');
+      }
+    }
+  }, { passive: true });
+
+  // ===== Mobile drawer =====
+  (function(){
+    const toc = document.getElementById('toc');
+    const menuBtn = document.getElementById('menuBtn');
+    const drawerClose = document.getElementById('drawerClose');
+    const backdrop = document.getElementById('tocBackdrop');
+    if(!toc || !menuBtn) return;
+    function openDrawer(){ toc.classList.add('drawer-open'); backdrop.classList.add('show'); menuBtn.setAttribute('aria-expanded','true'); document.body.style.overflow='hidden'; }
+    function closeDrawer(){ toc.classList.remove('drawer-open'); backdrop.classList.remove('show'); menuBtn.setAttribute('aria-expanded','false'); document.body.style.overflow=''; }
+    menuBtn.addEventListener('click', () => toc.classList.contains('drawer-open') ? closeDrawer() : openDrawer());
+    if(drawerClose) drawerClose.addEventListener('click', closeDrawer);
+    if(backdrop) backdrop.addEventListener('click', closeDrawer);
+    toc.querySelectorAll('a').forEach(l => l.addEventListener('click', closeDrawer));
+    window.addEventListener('keydown', (e) => { if(e.key==='Escape') closeDrawer(); });
+    window.addEventListener('resize', () => { if(window.innerWidth > 900) closeDrawer(); });
+  })();
+
+  // ===== Search / filter =====
+  const searchInput = document.getElementById('topicSearch');
+  const searchWrap = document.getElementById('siteSearch');
+  const clearBtn = document.getElementById('searchClear');
+  const noResults = document.getElementById('noResults');
+  const groups = Array.from(document.querySelectorAll('.group'));
+
+  function runFilter(){
+    const q = searchInput.value.trim().toLowerCase();
+    searchWrap.classList.toggle('has-query', q.length > 0);
+
+    let totalVisible = 0;
+    groups.forEach(group => {
+      const links = Array.from(group.querySelectorAll('.topic-link'));
+      if(links.length === 0){
+        // groups with no links (e.g. empty-state) always show
+        totalVisible += (q === '' ? 1 : 0);
+        group.style.display = (q === '') ? '' : 'none';
+        return;
+      }
+      let groupVisible = 0;
+      links.forEach(link => {
+        const label = link.textContent.toLowerCase();
+        const match = q === '' || label.includes(q);
+        link.style.display = match ? '' : 'none';
+        if(match) groupVisible++;
+      });
+      group.style.display = groupVisible > 0 ? '' : 'none';
+      totalVisible += groupVisible;
+    });
+
+    noResults.classList.toggle('show', totalVisible === 0);
+  }
+
+  searchInput.addEventListener('input', runFilter);
+  clearBtn.addEventListener('click', () => {
+    searchInput.value = '';
+    runFilter();
+    searchInput.focus();
+  });
+  window.addEventListener('keydown', (e) => {
+    if(e.key === '/' && document.activeElement !== searchInput){
+      e.preventDefault();
+      searchInput.focus();
+    }
+    if(e.key === 'Escape' && document.activeElement === searchInput){
+      searchInput.value = '';
+      runFilter();
+      searchInput.blur();
+    }
+  });
+</script>
+
+</body>
+</html>
