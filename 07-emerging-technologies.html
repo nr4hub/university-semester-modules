@@ -399,7 +399,14 @@ footer{ text-align:center; color:var(--sub); font-size:12.5px; padding:20px 0 50
 .lb-nav:hover{ background:#3c4043; }
 .lb-prev{ left:14px; } .lb-next{ right:14px; }
 .lb-count{ color:#9aa0a6; font-size:12.5px; letter-spacing:.04em; }
-@media (max-width:700px){ .lb-nav{ width:40px; height:40px; font-size:22px; } .lb-prev{ left:6px; } .lb-next{ right:6px; } }
+@media (max-width:700px){
+  .lb-overlay{ padding:16px 12px 92px; }
+  .lb-overlay img{ max-height:68vh; }
+  .lb-nav{ top:auto; bottom:22px; transform:none; width:46px; height:46px; font-size:24px; }
+  .lb-prev{ left:calc(50% - 92px); right:auto; }
+  .lb-next{ right:calc(50% - 92px); left:auto; }
+  .lb-count{ position:fixed; bottom:34px; left:50%; transform:translateX(-50%); font-size:13px; }
+}
 @keyframes lbFade{ from{opacity:0;} to{opacity:1;} }
 @keyframes lbZoom{ from{transform:scale(.94);} to{transform:scale(1);} }
 </style>
