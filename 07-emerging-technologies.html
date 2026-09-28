@@ -370,6 +370,38 @@ footer{ text-align:center; color:var(--sub); font-size:12.5px; padding:20px 0 50
   .dline .who{width:auto; align-self:flex-start; padding:3px 10px;}
   table.vtable{min-width:420px;}
 }
+
+/* ===== Sinhala translation toggles ===== */
+.si-toggle{ display:inline-flex; align-items:center; gap:7px; background:#2a2b2e; border:1px solid var(--line); color:#a8c7fa; font-family:'Roboto',sans-serif; font-weight:500; font-size:12.5px; padding:7px 13px; border-radius:20px; cursor:pointer; white-space:nowrap; transition:background .15s ease, border-color .15s ease; }
+.si-divider{ display:flex; align-items:center; gap:14px; margin:26px 0 0; }
+.si-divider::before, .si-divider::after{ content:''; flex:1; height:1px; background:var(--line); }
+.si-toggle:hover{ background:#33343a; border-color:#5f6368; }
+.si-toggle .flag{ font-size:13px; }
+.si-toggle .arrow{ display:inline-block; transition:transform .2s ease; font-size:10px; }
+.si-toggle[aria-expanded="true"] .arrow{ transform:rotate(180deg); }
+.si-panel{ display:none; background:#1c2b22; border:1px solid #2f5b41; border-left:4px solid var(--green); border-radius:10px; padding:16px 20px; margin-top:14px; font-size:14.5px; color:#d3e9db; }
+.si-panel.open{ display:block; animation:fadeSlide .18s ease; }
+.si-panel p{ color:#d3e9db; font-size:14.5px; margin:0 0 10px; }
+.si-panel p:last-child{ margin-bottom:0; }
+.si-panel .si-label{ font-family:'Roboto',sans-serif; font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:#7cc99a; font-weight:700; margin-bottom:8px; display:block; }
+@keyframes fadeSlide{ from{opacity:0; transform:translateY(-4px);} to{opacity:1; transform:translateY(0);} }
+
+
+/* ===== Image lightbox (click to enlarge) ===== */
+.figure img{ cursor:zoom-in; }
+.lb-overlay{ position:fixed; inset:0; z-index:1000; display:none; align-items:center; justify-content:center; flex-direction:column; gap:12px; background:rgba(10,11,13,.92); padding:24px; cursor:zoom-out; }
+.lb-overlay.open{ display:flex; animation:lbFade .18s ease; }
+.lb-overlay img{ max-width:96vw; max-height:84vh; object-fit:contain; border-radius:10px; box-shadow:0 8px 40px rgba(0,0,0,.6); background:#fff; animation:lbZoom .2s ease; }
+.lb-caption{ color:#c7cbd1; font-size:13.5px; text-align:center; max-width:90vw; }
+.lb-close{ position:fixed; top:14px; right:16px; width:40px; height:40px; border-radius:50%; border:1px solid #5f6368; background:#2a2b2e; color:#e8eaed; font-size:22px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.lb-close:hover{ background:#3c4043; }
+.lb-nav{ position:fixed; top:50%; transform:translateY(-50%); width:48px; height:48px; border-radius:50%; border:1px solid #5f6368; background:rgba(42,43,46,.92); color:#e8eaed; font-size:26px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center; z-index:2; padding:0 0 3px; }
+.lb-nav:hover{ background:#3c4043; }
+.lb-prev{ left:14px; } .lb-next{ right:14px; }
+.lb-count{ color:#9aa0a6; font-size:12.5px; letter-spacing:.04em; }
+@media (max-width:700px){ .lb-nav{ width:40px; height:40px; font-size:22px; } .lb-prev{ left:6px; } .lb-next{ right:6px; } }
+@keyframes lbFade{ from{opacity:0;} to{opacity:1;} }
+@keyframes lbZoom{ from{transform:scale(.94);} to{transform:scale(1);} }
 </style>
 </head>
 <body>
@@ -468,6 +500,15 @@ footer{ text-align:center; color:var(--sub); font-size:12.5px; padding:20px 0 50
         </ul>
       </div>
       <div class="callout tip"><b>Exam tip:</b> Know the order — 1956 coined → 1st wave (rule-based) → Winter 1 → Expert Systems → Winter 2 → 2nd wave (ML/DL) → 2022+ mainstream adoption.</div>
+    
+      <div class="si-divider"><button class="si-toggle" data-target="si-history" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
+      <div class="si-panel" id="si-history">
+        <span class="si-label">සිංහල පරිවර්තනය</span>
+        <p class="si">කෘත්‍රිම බුද්ධිය (AI) ජනප්‍රියත්වය 1956 සිට රැල්ලවල් ලෙස වර්ධනය වූ අතර, ප්‍රගතිය සහ අරමුදල් අඩු වූ <b>AI Winters</b> ලෙස හැඳින්වෙන කාල පරිච්ඡේද දෙකක් ද තිබුණි.</p>
+        <p class="si"><b>1956:</b> John McCarthy විසින් Dartmouth Conference එකේදී "AI" යන යෙදුම හඳුන්වා දුන්නේය. <b>පළමු රැල්ල (Symbolic AI):</b> නීති පදනම් කරගත් (rule-based) ක්‍රමලේඛනය ගණිතමය ගණනය කිරීම් සහ ස්වයංක්‍රීය ක්‍රීඩා සඳහා භාවිත විය. <b>AI Winter 1:</b> අරමුදල් කප්පාදුව නිසා ප්‍රගතිය මන්දගාමී විය.</p>
+        <p class="si"><b>Expert Systems:</b> වෛද්‍ය රෝග විනිශ්චය වැනි සීමිත කාර්යයන් සඳහා දැනුම පදනම් කරගත් පද්ධති උපකාර විය. <b>AI Winter 2:</b> Expert systems නඩත්තු කිරීමට සහ පුළුල් කිරීමට අපහසු වූ නිසා ප්‍රගතිය නැවතත් පහත වැටුණි. <b>දෙවන රැල්ල (Machine/Deep Learning):</b> නීති පදනම් කරගත් AI වෙනුවට සංඛ්‍යාන ක්‍රම (Machine Learning) භාවිත කිරීමට ප්‍රතිමානයේ වෙනසක් සිදු විය. Big data සහ ශක්තිමත් GPU නිසා Deep Learning හැකි විය.</p>
+        <p class="si"><b>2022 සිට:</b> ChatGPT මගින් සාමාන්‍ය මහජනතාව AI විශාල වශයෙන් භාවිත කිරීමට පටන් ගත් අතර, GPT-3/4, Gemini, LLaMa වැනි ආකෘති ඊට පසුව පැමිණියේය.</p>
+      </div>
     </section><section class="section" id="ai-basics">
       <div class="kicker">
         <div class="kicker-left"><div class="num-badge" style="background:var(--green)">2</div><h2>Understanding AI, its applications &amp; Expert Systems</h2></div>
@@ -501,6 +542,17 @@ footer{ text-align:center; color:var(--sub); font-size:12.5px; padding:20px 0 50
         <tr><td class="term">Engineering</td><td>Troubleshoot problems, design solutions</td><td>Fault diagnosis systems</td></tr>
       </tbody></table></div>
       <p><b>Modern expert systems</b> now use machine learning and AI to simulate expert judgment, improving their performance over time as they gain experience — just like humans.</p>
+    
+      <div class="callout tip"><b>Exam tip:</b> Memorize the 5 applications — Expert Systems, NLP, Speech Recognition, Computer Vision, Robotics — and the expert-system flow: User → User Interface → Inference Engine (reasons) ↔ Knowledge Base (stores the expert's knowledge) → Advice.</div>
+    
+      <div class="si-divider"><button class="si-toggle" data-target="si-ai-basics" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
+      <div class="si-panel" id="si-ai-basics">
+        <span class="si-label">සිංහල පරිවර්තනය</span>
+        <p class="si"><b>කෘත්‍රිම බුද්ධිය (AI)</b> යනු මිනිස් බුද්ධිමත් හැසිරීම් අනුකරණය කිරීමට යන්ත්‍රවලට ඇති හැකියාවයි. එයට ඉගෙනීම, තර්ක කිරීම, ගැටලු විසඳීම සහ ස්වයං-නිවැරදි කිරීම ඇතුළත් වේ.</p>
+        <p class="si"><b>AI හි ප්‍රධාන යෙදුම් 5:</b> Expert Systems, Natural Language Processing, Speech Recognition, Computer Vision සහ Robotics.</p>
+        <p class="si"><b>Expert System</b> යනු නිශ්චිත ක්ෂේත්‍රයක විශේෂඥයෙකු ලෙස ක්‍රියා කිරීමට නිර්මාණය කළ පරිගණක වැඩසටහනකි. විශේෂඥ නොවන පරිශීලකයෙක් <b>user interface</b> හරහා <b>query</b> එකක් යවයි; <b>inference engine</b> එක, සැබෑ විශේෂඥයෙකුගේ දැනුමෙන් සකස් කළ <b>knowledge base</b> එක මත තර්ක කර උපදෙස් (<b>advice</b>) ලබා දෙයි.</p>
+        <p class="si">Expert systems වෛද්‍ය (MYCIN), මූල්‍ය, නීති සහ ඉංජිනේරු ක්ෂේත්‍රවල භාවිත වේ. නවීන expert systems අත්දැකීම් ලැබෙන විට තම ක්‍රියාකාරිත්වය වැඩිදියුණු කර ගැනීමට machine learning භාවිත කරයි.</p>
+      </div>
     </section><section class="section" id="nlp-cv">
       <div class="kicker">
         <div class="kicker-left"><div class="num-badge" style="background:var(--red)">3</div><h2>Natural Language Processing &amp; Computer Vision</h2></div>
@@ -541,6 +593,16 @@ footer{ text-align:center; color:var(--sub); font-size:12.5px; padding:20px 0 50
         <tr><td class="term">Scene Understanding</td><td>Making sense of complex environments</td><td>Self-driving cars navigating roads</td></tr>
       </tbody></table></div>
       <p class="lede" style="margin-top:14px;">7 applications of computer vision: Safety/Security, Face recognition, Self-driving cars, Robotics, Augmented Reality, Movement/gesture recognition, Image recovery &amp; processing.</p>
+    
+      <div class="callout tip"><b>Exam tip:</b> NLU = <i>understanding</i> language (sentiment analysis, chatbots, email filtering); NLG = <i>generating</i> language (summarization, predictive text). For CV tasks: classification = <i>what</i> is it, detection = <i>where</i> are the objects, segmentation = label <i>every pixel</i>.</div>
+    
+      <div class="si-divider"><button class="si-toggle" data-target="si-nlp-cv" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
+      <div class="si-panel" id="si-nlp-cv">
+        <span class="si-label">සිංහල පරිවර්තනය</span>
+        <p class="si"><b>NLP (Natural Language Processing)</b> හි අරමුණ මිනිසුන්ට සහ පරිගණකවලට පරිගණක භාෂාවක් වෙනුවට ඉංග්‍රීසි වැනි ස්වාභාවික භාෂාවකින් සන්නිවේදනය කිරීමට ඉඩ සැලසීමයි. එය කාණ්ඩ දෙකකි: <b>NLU</b> — යන්ත්‍රවලට මිනිස් භාෂාව තේරුම් ගැනීමට සහ අර්ථකථනය කිරීමට සලස්වයි (sentiment analysis, chatbots, email filtering). <b>NLG</b> — ස්වාභාවික, අදාළ මිනිස් වැනි භාෂාව නිපදවීමට සලස්වයි (summarization, predictive text, smart assistants, translation).</p>
+        <p class="si"><b>Computer Vision (CV)</b> යනු පරිගණකවලට රූප සහ වීඩියෝවලින් තොරතුරු අර්ථකථනය කර ලබා ගැනීමට හැකි කරන අතර, එය මිනිස් සංජානනයට සමානය. මිනිස් පෙනීම එක් ස්ථිර පිළිතුරක් (උදා: "Tomato") ලබා දෙන අතර, computer vision සම්භාවිතා බෙදාහැරීමක් (උදා: 84% Tomato, 15% Apple) ලබා දෙයි.</p>
+        <p class="si"><b>සාම්ප්‍රදායික රූප සැකසුම් ක්‍රියාවලිය:</b> Camera → Image Acquisition → Pre-processing → Segmentation → Representation → Classification. <b>CV කාර්යයන්:</b> Image Classification (රූපයේ ඇති වස්තුව හඳුනා ගැනීම), Object Detection (වස්තු කිහිපයක් ස්ථානගත කර හඳුනා ගැනීම), Image Segmentation (සෑම pixel එකක්ම වර්ගීකරණය), Face Recognition, Pose Estimation සහ Scene Understanding.</p>
+      </div>
     </section><section class="section" id="robotics">
       <div class="kicker">
         <div class="kicker-left"><div class="num-badge" style="background:var(--yellow)">4</div><h2>Robotics</h2></div>
@@ -562,6 +624,16 @@ footer{ text-align:center; color:var(--sub); font-size:12.5px; padding:20px 0 50
         <tr><td class="term">Reinforcement Learning</td><td>Enables decision-making through trial and error</td></tr>
       </tbody></table></div>
       <p>Robots also rely on <b>information retrieval and reasoning under uncertainty</b> to process instructions and predict consequences, plus <b>cognitive modeling and affective computing</b> to work alongside humans.</p>
+    
+      <div class="callout tip"><b>Exam tip:</b> A robot = <b>senses → processes → acts</b>. Know the 5 types (Industrial, Service, Humanoids, Autonomous Vehicles, Drones) and match each AI area to its role: CV = sees, NLP = understands speech, ML = improves with experience, RL = trial and error.</div>
+    
+      <div class="si-divider"><button class="si-toggle" data-target="si-robotics" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
+      <div class="si-panel" id="si-robotics">
+        <span class="si-label">සිංහල පරිවර්තනය</span>
+        <p class="si"><b>රොබෝවරයා</b> යනු තම පරිසරය <b>සංවේදනය</b> (sense) කරන, දත්ත <b>සකසන</b> (process) සහ භෞතික ක්‍රියා <b>සිදු කරන</b> (perform) යන්ත්‍රයකි.</p>
+        <p class="si"><b>රොබෝ වර්ග:</b> Industrial Robots, Service Robots, Humanoids, Autonomous Vehicles සහ Drones.</p>
+        <p class="si"><b>AI රොබෝවරුන්ට බලය දෙන ආකාරය:</b> Computer Vision මගින් රොබෝවරුන්ට "දැකීමට" සහ වස්තු හඳුනා ගැනීමට හැකි වේ; NLP මගින් මිනිස් කථනය තේරුම් ගැනීමට උපකාරී වේ; Machine Learning මගින් අත්දැකීම් සමඟ වැඩිදියුණු වීමට ඉඩ සලසයි; Reinforcement Learning මගින් අත්හදා බැලීම සහ වැරදි (trial and error) හරහා තීරණ ගැනීමට හැකි වේ. රොබෝවරුන් උපදෙස් සකසා ප්‍රතිවිපාක පුරෝකථනය කිරීමට <b>information retrieval</b> සහ <b>reasoning under uncertainty</b> ද, මිනිසුන් සමඟ වැඩ කිරීමට <b>cognitive modeling</b> සහ <b>affective computing</b> ද භාවිත කරයි.</p>
+      </div>
     </section><section class="section" id="aimldl">
       <div class="kicker">
         <div class="kicker-left"><div class="num-badge" style="background:#7B61FF">5</div><h2>AI vs ML vs DL</h2></div>
@@ -591,6 +663,17 @@ footer{ text-align:center; color:var(--sub); font-size:12.5px; padding:20px 0 50
       <p>Deep Learning uses <b>Artificial Neural Networks (ANNs)</b> with many hidden layers, mimicking the human brain's structure to learn complex features automatically.</p>
       <div class="callout"><b>Machine Learning pipeline:</b> Input → (Human does) Feature Extraction → Classification → Output.<br><b>Deep Learning pipeline:</b> Input → Feature Extraction + Classification done automatically by the network → Output.</div>
       <p>DL excels at image classification, speech recognition, and natural language understanding — but requires large datasets and high computational power (GPUs, and training can take days/weeks).</p>
+    
+      <div class="callout tip"><b>Exam tip:</b> AI ⊃ ML ⊃ DL. The classic question: in ML a <b>human</b> does feature extraction, in DL the <b>network</b> does it automatically (but needs big data + GPUs). Supervised = labeled data, Unsupervised = clusters/patterns, Reinforcement = rewards &amp; punishments.</div>
+    
+      <div class="si-divider"><button class="si-toggle" data-target="si-aimldl" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
+      <div class="si-panel" id="si-aimldl">
+        <span class="si-label">සිංහල පරිවර්තනය</span>
+        <p class="si">AI, ML සහ DL යනු පුළුල්ම සිට නිශ්චිතම දක්වා එකක් තුළ එකක් ඇති සංකල්ප තුනකි: <b>AI ⊃ ML ⊃ DL</b>. <b>AI</b> — බුද්ධිමත් හැසිරීම් අනුකරණය කරයි; <b>ML</b> — දත්ත වලින් ඉගෙන ගෙන ස්වයංක්‍රීයව වැඩිදියුණු වේ; <b>DL</b> — feature extraction සඳහා බහු-ස්ථර neural networks භාවිත කරයි.</p>
+        <p class="si"><b>Machine Learning වර්ග 3:</b> <b>Supervised Learning</b> — ලේබල් කළ (labeled) දත්ත වලින් ඉගෙන ගනී, ඊළඟ අගය පුරෝකථනය කරයි (spam detection, ගෙවල් මිල පුරෝකථනය). <b>Unsupervised Learning</b> — ලේබල් නොකළ දත්තවල රටා සොයයි, clusters හඳුනා ගනී (customer segmentation, anomaly detection). <b>Reinforcement Learning</b> — ත්‍යාග සහ දඬුවම් හරහා ඉගෙන ගනී, වැරදි වලින් ඉගෙනීම (AlphaGo, self-driving cars).</p>
+        <p class="si"><b>Deep Learning</b> මිනිස් මොළයේ ව්‍යුහය අනුකරණය කරමින් සංකීර්ණ features ස්වයංක්‍රීයව ඉගෙනීමට විශාල hidden layers සහිත <b>Artificial Neural Networks (ANNs)</b> භාවිත කරයි. <b>ML pipeline:</b> Input → (මිනිසා විසින්) Feature Extraction → Classification → Output. <b>DL pipeline:</b> Input → Feature Extraction සහ Classification දෙකම network එක විසින් ස්වයංක්‍රීයව කරයි → Output.</p>
+        <p class="si">DL සඳහා විශාල දත්ත කට්ටල සහ ඉහළ පරිගණක ශක්තියක් (GPUs) අවශ්‍ය වන අතර training දින හෝ සති ගත විය හැක.</p>
+      </div>
     </section><section class="section" id="real-world">
       <div class="kicker">
         <div class="kicker-left"><div class="num-badge" style="background:#EA4335">6</div><h2>AI in a Nutshell — Real-World Implementations</h2></div>
@@ -601,6 +684,15 @@ footer{ text-align:center; color:var(--sub); font-size:12.5px; padding:20px 0 50
       </div>
       <div class="chip-row"><span class="chip">🚗 Self-driving cars — CV + ML + real-time sensors</span><span class="chip">💬 LLMs — ChatGPT, Google Gemini</span><span class="chip">🏥 Healthcare — ML diagnostic tools for diseases like cancer</span></div>
       <div class="callout tip"><b>Remember:</b> AI is the broad goal, ML is how systems learn from data, and DL is the neural-network technique that powers most modern breakthroughs (LLMs included).</div>
+    
+      <div class="callout tip"><b>Exam tip:</b> Real systems combine several AI areas — e.g. a self-driving car = Computer Vision + Machine Learning + real-time sensors. If asked for a Deep Learning example in daily life, LLMs like ChatGPT and Gemini are the go-to answer.</div>
+    
+      <div class="si-divider"><button class="si-toggle" data-target="si-real-world" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
+      <div class="si-panel" id="si-real-world">
+        <span class="si-label">සිංහල පරිවර්තනය</span>
+        <p class="si">සැබෑ පද්ධති බොහෝ විට AI ක්ෂේත්‍ර කිහිපයක් එකවර ඒකාබද්ධ කරයි. උදාහරණ: <b>Self-driving cars</b> — CV + ML + තත්‍ය-කාලීන සංවේදක; <b>LLMs</b> — ChatGPT, Google Gemini; <b>සෞඛ්‍ය සේවා</b> — පිළිකා වැනි රෝග සඳහා ML රෝග විනිශ්චය මෙවලම්.</p>
+        <p class="si"><b>මතක තබා ගන්න:</b> AI යනු පුළුල් අරමුණයි, ML යනු පද්ධති දත්ත වලින් ඉගෙන ගන්නා ආකාරයයි, DL යනු නවීන දියුණුවෙන් බොහොමයකට (LLMs ඇතුළව) බලය දෙන neural-network තාක්ෂණයයි.</p>
+      </div>
     </section><section class="section" id="iot">
       <div class="kicker">
         <div class="kicker-left"><div class="num-badge" style="background:var(--green)">7</div><h2>Internet of Things (IoT)</h2></div>
@@ -629,6 +721,16 @@ footer{ text-align:center; color:var(--sub); font-size:12.5px; padding:20px 0 50
         <img src="assets/20-warehouse-iot.png" alt="IoT-enabled warehouse management diagram — incoming/outgoing inventory, cloud aggregators, ERP system, visual dashboard">
       </div>
       <p>Warehouses use IoT machinery and sensors to track product generation and location. Sensors on incoming/outgoing inventory feed a <b>cloud aggregator</b>, which connects to an <b>ERP system</b> and a <b>visual dashboard</b> for staff. Benefits: reduces time and money, and improves inventory accuracy.</p>
+    
+      <div class="callout tip"><b>Exam tip:</b> Memorize the 4 stages in order: <b>Sensors → Connectivity/Gateway → Data Processing → User Interface</b>. For the warehouse example: sensors → cloud aggregator → ERP system → visual dashboard (benefit: saves time and money, improves inventory accuracy).</div>
+    
+      <div class="si-divider"><button class="si-toggle" data-target="si-iot" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
+      <div class="si-panel" id="si-iot">
+        <span class="si-label">සිංහල පරිවර්තනය</span>
+        <p class="si"><b>IoT (Internet of Things)</b> යනු සංවේදක, මෘදුකාංග සහ අනෙකුත් තාක්ෂණයන් සහිතව ඇතුළත් කළ භෞතික වස්තූන්ගේ ජාලයක් වන අතර, ඒවා අන්තර්ජාලය හෝ වෙනත් සන්නිවේදන ජාල හරහා දත්ත සම්බන්ධ කර හුවමාරු කරයි.</p>
+        <p class="si"><b>IoT ක්‍රියා කරන ආකාරය — අදියර 4:</b> <b>Sensors</b> — දත්ත එකතු කරයි (චලනය, උෂ්ණත්වය, lux, පීඩනය). <b>Connectivity / Gateway</b> — WiFi, Bluetooth හෝ cellular හරහා දත්ත cloud එකට යවයි. <b>Data Processing</b> — රටා සහ අවබෝධ සඳහා දත්ත විශ්ලේෂණය කරයි. <b>User Interface</b> — mobile app එකක් වැනි මාධ්‍යයකින් ක්‍රියාත්මක කළ හැකි තොරතුරු පෙන්වයි.</p>
+        <p class="si"><b>භාවිත:</b> Smart Homes, Smart Cities, Wearable Tech, Industrial IoT, කෘෂිකර්මය සහ Amazon Go stores. <b>Warehouse IoT උදාහරණය:</b> ගබඩාවට ඇතුළු වන/පිටවන තොග මත ඇති සංවේදක <b>cloud aggregator</b> එකකට දත්ත යවන අතර, එය <b>ERP system</b> එකකට සහ කාර්ය මණ්ඩලය සඳහා <b>visual dashboard</b> එකකට සම්බන්ධ වේ. ප්‍රතිලාභ: කාලය සහ මුදල් ඉතිරි කරයි, තොග නිරවද්‍යතාව වැඩි කරයි.</p>
+      </div>
     </section><section class="section" id="quantum">
       <div class="kicker">
         <div class="kicker-left"><div class="num-badge" style="background:var(--red)">8</div><h2>Quantum Computing</h2></div>
@@ -670,6 +772,17 @@ footer{ text-align:center; color:var(--sub); font-size:12.5px; padding:20px 0 50
         <tr><td class="term">D-Wave</td><td>Quantum annealing systems for optimization</td></tr>
         <tr><td class="term">Amazon / Microsoft</td><td>Amazon Braket &amp; Microsoft Azure Quantum — cloud-based QC services</td></tr>
       </tbody></table></div>
+    
+      <div class="callout tip"><b>Exam tip:</b> Remember <b>SEI</b> — Superposition, Entanglement, Interference — and the classical vs quantum contrasts: bit vs qubit, sequential vs parallel, linear vs exponential. Two facts that get asked: Google's Sycamore (2019) = quantum supremacy, and Shor's algorithm threatens RSA cryptography.</div>
+    
+      <div class="si-divider"><button class="si-toggle" data-target="si-quantum" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
+      <div class="si-panel" id="si-quantum">
+        <span class="si-label">සිංහල පරිවර්තනය</span>
+        <p class="si"><b>Quantum computing</b> quantum භෞතික විද්‍යාවේ මූලධර්ම භාවිත කරයි. සම්ප්‍රදායික bits (0 හෝ 1) මෙන් නොව, quantum bits — <b>qubits</b> — එකවර දෙකම විය හැක.</p>
+        <p class="si"><b>quantum ගුණාංග 3 ("SEI"):</b> <b>Superposition</b> — qubit එකකට 0, 1 හෝ එකවර දෙකම විය හැක (ගුවනේ කැරකෙන කාසියක් මෙන්). <b>Entanglement</b> — qubits දුර ප්‍රමාණය නොසලකා සම්බන්ධ කළ හැකි අතර, එකක් වෙනස් කිරීම අනෙකට ක්ෂණිකව බලපායි. <b>Quantum Interference</b> — නිවැරදි පිළිතුරු ඉස්මතු කර වැරදි ඒවා ඉවත් කර නිරවද්‍යතාව වැඩි කරයි.</p>
+        <p class="si"><b>Classical vs Quantum:</b> Classical පරිගණක bits භාවිත කර අනුපිළිවෙලින් (sequential) සකසන අතර ශක්තිය රේඛීයව (linear) වැඩි වේ; quantum පරිගණක qubits භාවිත කර superposition හරහා සමාන්තරව (parallel) සකසන අතර ශක්තිය ඝාතීයව (exponential) වැඩි වේ.</p>
+        <p class="si"><b>යෙදුම්:</b> Cryptography (Shor's algorithm — RSA බිඳීම), ඖෂධ ක්ෂේත්‍රය (අණු අනුකරණය), Logistics (DHL, FedEx මාර්ග ප්‍රශස්තකරණය), මූල්‍ය (අවදානම් ආකෘති, වංචා හඳුනාගැනීම), AI සහ ML. <b>සමාගම්:</b> IBM (IBM Q System One), Google (Sycamore — 2019 දී "quantum supremacy" ලබා ගත්තේය), D-Wave (quantum annealing), Amazon Braket සහ Microsoft Azure Quantum (cloud පදනම් සේවා).</p>
+      </div>
     </section>
 
     <!-- ============================================================
@@ -1542,5 +1655,77 @@ footer{ text-align:center; color:var(--sub); font-size:12.5px; padding:20px 0 50
 })();
 </script>
 
+<script>
+  document.querySelectorAll('.si-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const panel = document.getElementById(btn.getAttribute('data-target'));
+      if(!panel) return;
+      const isOpen = panel.classList.toggle('open');
+      btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    });
+  });
+</script>
+<script>
+(function(){
+  const imgs = Array.from(document.querySelectorAll('.figure img'));
+  const overlay = document.createElement('div');
+  overlay.className = 'lb-overlay';
+  overlay.setAttribute('role','dialog'); overlay.setAttribute('aria-modal','true'); overlay.setAttribute('aria-label','Enlarged image');
+  overlay.innerHTML = '<button class="lb-close" aria-label="Close image">&times;</button>' +
+    '<button class="lb-nav lb-prev" aria-label="Previous image">&#8249;</button>' +
+    '<button class="lb-nav lb-next" aria-label="Next image">&#8250;</button>' +
+    '<img alt=""><div class="lb-caption"></div><div class="lb-count"></div>';
+  document.body.appendChild(overlay);
+  const bigImg = overlay.querySelector('img');
+  const cap = overlay.querySelector('.lb-caption');
+  const count = overlay.querySelector('.lb-count');
+  let idx = 0;
+  function show(i){
+    idx = (i + imgs.length) % imgs.length;
+    const img = imgs[idx];
+    bigImg.src = img.currentSrc || img.src;
+    bigImg.alt = img.alt || '';
+    const fc = img.closest('.figure') && img.closest('.figure').querySelector('figcaption');
+    cap.textContent = fc ? fc.textContent : (img.alt || '');
+    count.textContent = (idx + 1) + ' / ' + imgs.length;
+  }
+  function open(i){
+    show(i);
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function close(){
+    overlay.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  const isOpen = () => overlay.classList.contains('open');
+  imgs.forEach((img, i) => img.addEventListener('click', () => open(i)));
+  overlay.addEventListener('click', close);
+  overlay.querySelector('.lb-prev').addEventListener('click', e => { e.stopPropagation(); show(idx - 1); });
+  overlay.querySelector('.lb-next').addEventListener('click', e => { e.stopPropagation(); show(idx + 1); });
+  overlay.querySelector('.lb-close').addEventListener('click', e => { e.stopPropagation(); close(); });
+  window.addEventListener('keydown', e => {
+    if(!isOpen()) return;
+    if(e.key === 'Escape') close();
+    else if(e.key === 'ArrowLeft') show(idx - 1);
+    else if(e.key === 'ArrowRight') show(idx + 1);
+  });
+  // Swipe left / right on touch screens
+  let sx = null, sy = null;
+  overlay.addEventListener('touchstart', e => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, { passive: true });
+  overlay.addEventListener('touchend', e => {
+    if(sx === null) return;
+    const dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy;
+    sx = sy = null;
+    if(Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5){
+      e.preventDefault();
+      show(dx < 0 ? idx + 1 : idx - 1);
+      overlay._swiped = true; setTimeout(() => overlay._swiped = false, 400);
+    }
+  });
+  // ignore the synthetic click that follows a swipe so it doesn't close the viewer
+  overlay.addEventListener('click', e => { if(overlay._swiped){ e.stopImmediatePropagation(); } }, true);
+})();
+</script>
 </body>
 </html>
