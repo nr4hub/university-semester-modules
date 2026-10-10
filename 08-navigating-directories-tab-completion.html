@@ -1,0 +1,1803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>08. Navigating Directories &amp; Tab Completion — COMP40050</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@300;400;500;700&family=Roboto+Mono:wght@400;500&family=Noto+Sans+Sinhala:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --blue:#8ab4f8; --red:#f28b82; --yellow:#fdd663; --green:#81c995; --purple:#c58af9;
+  --ink:#e8eaed; --sub:#9aa0a6; --paper:#232427; --bg:#131417; --line:#3c4043;
+  --card-shadow: 0 1px 2px rgba(0,0,0,.5), 0 2px 10px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{ margin:0; font-family:'Roboto', Arial, sans-serif; background:var(--bg); color:var(--ink); line-height:1.65; overflow-x:hidden; }
+h1,h2,h3,.slide-title{ font-family:'Google Sans','Roboto',Arial,sans-serif; }
+a{ color:inherit; }
+.si{ font-family:'Noto Sans Sinhala','Roboto',sans-serif; }
+
+.mobile-bar{ display:none; position:sticky; top:0; z-index:40; align-items:center; justify-content:space-between; background:var(--paper); border-bottom:1px solid var(--line); padding:12px 16px; }
+.mobile-bar .m-title{ font-family:'Google Sans',sans-serif; font-weight:700; font-size:14.5px; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.menu-btn{ display:flex; align-items:center; justify-content:center; width:38px; height:38px; border-radius:10px; border:1px solid var(--line); background:var(--paper); flex:none; cursor:pointer; padding:0; }
+.menu-btn span, .menu-btn span::before, .menu-btn span::after{ content:""; display:block; width:18px; height:2px; background:var(--ink); position:relative; transition:transform .2s ease, opacity .2s ease; }
+.menu-btn span::before{ position:absolute; top:-6px; } .menu-btn span::after{ position:absolute; top:6px; }
+.menu-btn[aria-expanded="true"] span{ background:transparent; }
+.menu-btn[aria-expanded="true"] span::before{ top:0; transform:rotate(45deg); background:var(--ink); }
+.menu-btn[aria-expanded="true"] span::after{ top:0; transform:rotate(-45deg); background:var(--ink); }
+.toc-backdrop{ display:none; position:fixed; inset:0; background:rgba(32,33,36,.45); z-index:45; }
+.toc-backdrop.show{ display:block; }
+.drawer-close{ display:none; width:30px; height:30px; border-radius:8px; border:1px solid var(--line); background:var(--paper); align-items:center; justify-content:center; cursor:pointer; font-size:16px; line-height:1; color:var(--sub); flex:none; }
+nav.toc.drawer-open .drawer-close{ display:flex; }
+@keyframes slideIn{ from{ transform:translateX(-100%); opacity:.4; } to{ transform:translateX(0); opacity:1; } }
+
+.hero{ background:radial-gradient(circle 140px at calc(100% - 80px) 80px, rgba(255,255,255,.08) 99%, transparent 100%), radial-gradient(circle 110px at calc(10% + 110px) calc(100% + 10px), rgba(255,255,255,.07) 99%, transparent 100%), linear-gradient(120deg,#1a73e8 0%, #7B61FF 45%, #EA4335 100%); color:#fff; padding:56px 24px 40px; position:relative; }
+.hero-inner{max-width:1100px;margin:0 auto;position:relative;z-index:3;}
+.eyebrow{ display:inline-block; font-size:12px; letter-spacing:.14em; text-transform:uppercase; background:rgba(255,255,255,.18); padding:6px 12px; border-radius:20px; margin-bottom:18px; font-weight:500; }
+.hero h1{font-size:32px; margin:0 0 12px; font-weight:700; line-height:1.25;}
+.hero p.lead{font-size:16px; max-width:700px; opacity:.95; margin:0;}
+.hero-meta{display:flex; gap:20px; flex-wrap:wrap; font-size:13px; opacity:.9; margin-top:16px;}
+.hero-meta span{display:flex; align-items:center; gap:7px;}
+.dot{width:6px;height:6px;border-radius:50%;background:#fff;display:inline-block; flex:none;}
+
+.hero-search-row{ margin-top:22px; display:flex; align-items:flex-start; gap:16px; flex-wrap:wrap; }
+
+.site-search{ position:relative; z-index:2; flex:1 1 300px; }
+.site-search input{
+  width:100%; padding:13px 16px 13px 44px; border-radius:14px;
+  border:1px solid rgba(255,255,255,.32); background:rgba(255,255,255,.14);
+  color:#fff; font-size:14.5px; backdrop-filter:blur(6px); box-sizing:border-box;
+}
+.site-search input::placeholder{ color:rgba(255,255,255,.78); }
+.site-search input:focus{ outline:none; background:rgba(255,255,255,.22); border-color:#fff; }
+.site-search .s-icon{
+  position:absolute; left:15px; top:22px; transform:translateY(-50%);
+  font-size:14px; opacity:.85; pointer-events:none;
+}
+.site-search .s-clear{
+  position:absolute; right:8px; top:22px; transform:translateY(-50%);
+  width:26px; height:26px; border-radius:8px; border:none; background:rgba(255,255,255,.16);
+  color:#fff; font-size:13px; cursor:pointer; display:none; align-items:center; justify-content:center;
+}
+.site-search.has-query .s-clear{ display:flex; }
+.site-search .s-dropdown{
+  display:none; position:absolute; top:calc(100% + 8px); left:0; right:0;
+  background:var(--paper); border:1px solid var(--line); border-radius:14px;
+  box-shadow:0 8px 28px rgba(0,0,0,.6); max-height:320px; overflow:auto; padding:6px; z-index:30;
+}
+.site-search .s-dropdown.show{ display:block; }
+.site-search .s-item{
+  display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:9px;
+  color:var(--ink); text-decoration:none; font-size:13.5px; cursor:pointer;
+}
+.site-search .s-item:hover, .site-search .s-item.hl{ background:#2c2d30; }
+.site-search .s-item .s-num{
+  font-family:'Roboto Mono',monospace; font-size:11px; color:var(--sub);
+  background:#1a1b1e; border-radius:6px; padding:2px 6px; flex:none; min-width:24px; text-align:center;
+}
+.site-search .s-empty{ padding:14px 10px; font-size:13px; color:var(--sub); text-align:center; }
+
+#siteSearch{ z-index:5; } /* topic dropdown must overlap the 'Find on this page' box that follows it (matters on mobile where they stack) */
+.hero-find-col{ flex:1 1 300px; }
+.hero-find-col .site-search.find-page-search{ max-width:none; }
+.find-page-nav{
+  display:none; align-items:center; justify-content:space-between; gap:8px;
+  margin-top:8px; font-size:12px; color:rgba(255,255,255,.85);
+}
+.find-page-nav.show{ display:flex; }
+.find-page-nav .snav-btns{ display:flex; gap:6px; }
+.find-page-nav button{
+  width:26px; height:26px; border-radius:8px; border:1px solid rgba(255,255,255,.32);
+  background:rgba(255,255,255,.14); color:#fff; font-size:13px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+}
+.find-page-nav button:hover{ background:rgba(255,255,255,.24); }
+.find-page-nav button:disabled{ opacity:.4; cursor:default; }
+
+.path-nav{ max-width:1100px; margin:26px auto 0; position:relative; z-index:1; display:grid; grid-template-columns:1fr auto 1fr; gap:12px; align-items:stretch; }
+.path-btn{ display:flex; align-items:center; gap:10px; text-decoration:none; color:#fff; background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.28); border-radius:14px; padding:10px 16px; backdrop-filter:blur(6px); transition:background .15s ease, transform .15s ease; }
+.path-btn:hover{ background:rgba(255,255,255,.24); transform:translateY(-1px); }
+.path-btn .p-arrow{ font-size:16px; flex:none; }
+.path-btn .p-text{ display:flex; flex-direction:column; line-height:1.25; min-width:0; }
+.path-btn .p-kicker{ font-size:10px; letter-spacing:.1em; text-transform:uppercase; opacity:.8; }
+.path-btn .p-title{ font-size:13px; font-weight:600; font-family:'Google Sans',sans-serif; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.path-btn.next{ justify-content:flex-end; text-align:right; }
+.path-btn.next .p-text{ align-items:flex-end; }
+.path-btn.index{ justify-content:center; text-align:center; background:rgba(0,0,0,.22); border-color:rgba(255,255,255,.28); padding:10px 18px; }
+.path-btn.index .p-text{ align-items:center; }
+.path-spacer{visibility:hidden;}
+
+.bottom-nav{ max-width:1180px; margin:0 auto 40px; padding:0 24px; display:grid; grid-template-columns:1fr auto 1fr; gap:12px; }
+.bottom-nav .path-btn{ color:var(--ink); background:var(--paper); border:1px solid var(--line); }
+.bottom-nav .path-btn:hover{ background:#2c2d30; }
+.bottom-nav .path-btn.index{ background:#1a2a45; border-color:#2a3a55; }
+
+.wrap-idx{ max-width:1100px; margin:-56px auto 60px; padding:0 24px; }
+
+.layout{ max-width:1180px; margin:-8px auto 60px; padding:0 24px; display:grid; grid-template-columns:250px 1fr; gap:32px; align-items:start; }
+nav.toc{ background:var(--paper); border-radius:16px; box-shadow:var(--card-shadow); padding:18px 10px; position:sticky; top:20px; max-height:calc(100vh - 40px); overflow:auto; }
+nav.toc .toc-head{ font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--sub); padding:6px 14px 10px; font-weight:500; display:flex; align-items:center; justify-content:space-between; }
+nav.toc a{ display:block; padding:9px 14px; border-radius:10px; color:var(--ink); text-decoration:none; font-size:13.5px; border-left:3px solid transparent; }
+nav.toc a:hover{background:#2c2d30;}
+nav.toc a.active{background:#2a3a55; color:#a8c7fa; border-left-color:var(--blue); font-weight:500;}
+main{min-width:0;}
+
+/* ===== In-page "find" search (lives inside nav.toc — shared by desktop sidebar + mobile drawer) ===== */
+.toc-search{ padding:4px 10px 12px; }
+.toc-search-box{ position:relative; }
+.toc-search input{
+  width:100%; padding:9px 34px 9px 32px; border-radius:10px; border:1px solid var(--line);
+  background:#1a1b1e; color:var(--ink); font-size:13px; box-sizing:border-box;
+}
+.toc-search input::placeholder{ color:var(--sub); }
+.toc-search input:focus{ outline:none; border-color:#5f6368; }
+.toc-search .s-icon{ position:absolute; left:10px; top:50%; transform:translateY(-50%); font-size:12px; opacity:.7; pointer-events:none; }
+.toc-search .s-clear{
+  position:absolute; right:5px; top:50%; transform:translateY(-50%);
+  width:22px; height:22px; border-radius:6px; border:none; background:#2c2d30; color:var(--sub);
+  font-size:11px; cursor:pointer; display:none; align-items:center; justify-content:center;
+}
+.toc-search.has-query .s-clear{ display:flex; }
+.toc-search-nav{
+  display:none; align-items:center; justify-content:space-between; gap:8px;
+  margin-top:8px; font-size:11.5px; color:var(--sub);
+}
+.toc-search-nav.show{ display:flex; }
+.toc-search-nav .snav-btns{ display:flex; gap:4px; }
+.toc-search-nav button{
+  width:24px; height:24px; border-radius:6px; border:1px solid var(--line); background:#1a1b1e;
+  color:var(--ink); font-size:12px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+}
+.toc-search-nav button:hover{ background:#2c2d30; }
+.toc-search-nav button:disabled{ opacity:.4; cursor:default; }
+
+mark.search-hit{ background:#fdd663; color:#131417; padding:0 2px; border-radius:3px; }
+mark.search-hit.active{ background:#ff9d45; box-shadow:0 0 0 2px rgba(255,157,69,.35); }
+
+.section{ background:var(--paper); border-radius:18px; box-shadow:var(--card-shadow); padding:30px 32px; margin-bottom:24px; scroll-margin-top:20px; position:sticky; }
+.section .kicker{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
+.kicker-left{ display:flex; align-items:center; gap:10px; }
+.num-badge{ width:30px;height:30px;border-radius:9px; display:flex;align-items:center;justify-content:center; color:#fff; font-weight:700; font-size:14px; font-family:'Google Sans',sans-serif; flex:none; line-height:1; }
+.section h2{font-size:21px; margin:0; font-weight:700; line-height:1.3;}
+.section p{color:#c7cbd1; font-size:15px; margin:0 0 14px;}
+.section p:last-child{margin-bottom:0;}
+.lede{font-size:15.5px; color:#c7cbd1;}
+.subhead{ font-family:'Google Sans',sans-serif; font-size:14.5px; font-weight:700; color:#e8eaed; margin:22px 0 10px; display:flex; align-items:center; gap:9px; }
+.subhead:first-of-type{margin-top:4px;}
+.subhead .sub-dot{ width:8px; height:8px; border-radius:50%; flex:none; }
+
+.phrase-list{ list-style:none; margin:0 0 4px; padding:0; }
+.phrase-list li{ padding:11px 0; border-bottom:1px solid var(--line); font-size:15px; color:#dfe1e5; }
+.phrase-list li:last-child{ border-bottom:none; }
+.phrase-list .en{ font-weight:500; }
+.phrase-list .si-inline{ display:block; color:#9aa0a6; font-size:13px; margin-top:3px; }
+
+.dialogue{ background:#1a1b1e; border:1px solid var(--line); border-radius:14px; padding:18px 20px; margin:16px 0; }
+.dialogue .dlg-title{ font-family:'Google Sans',sans-serif; font-weight:700; font-size:13px; color:var(--yellow); text-transform:uppercase; letter-spacing:.06em; margin-bottom:14px; }
+.dline{ display:flex; gap:12px; margin-bottom:12px; align-items:flex-start; }
+.dline:last-child{margin-bottom:0;}
+.dline .who{ flex:none; width:78px; font-family:'Google Sans',sans-serif; font-weight:700; font-size:12.5px; padding:4px 0; border-radius:8px; text-align:center; color:#fff; height:fit-content; }
+.dline.a .who{ background:#1a73e8; }
+.dline.b .who{ background:#EA4335; }
+.dline.c .who{ background:#34A853; }
+.dline.d .who{ background:#F09300; }
+.dline.e .who{ background:#7B61FF; }
+.dline .msg{ background:#232427; border:1px solid var(--line); border-radius:10px; padding:10px 14px; font-size:14.5px; color:#e8eaed; flex:1; }
+.dline .msg .si-line{ display:block; color:#9aa0a6; font-size:12.5px; margin-top:5px; }
+
+table.vtable{ width:100%; border-collapse:collapse; margin-top:6px; font-size:14px; }
+table.vtable th{ text-align:left; font-family:'Google Sans',sans-serif; font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--sub); padding:10px 12px; border-bottom:2px solid var(--line); }
+table.vtable td{ padding:11px 12px; border-bottom:1px solid var(--line); color:#dfe1e5; vertical-align:top; }
+table.vtable tr:last-child td{ border-bottom:none; }
+table.vtable td.term{ font-weight:600; color:#fff; white-space:nowrap; }
+.table-wrap{ overflow-x:auto; margin:8px 0 4px; border:1px solid var(--line); border-radius:12px; }
+table.vtable{min-width:520px;}
+
+.callout{ background:#22344d; border-left:4px solid var(--blue); border-radius:10px; padding:14px 18px; font-size:14px; color:#a8c7fa; margin:16px 0; }
+.callout.warn{ background:#3a2530; border-left-color:var(--red); color:#f3b8c2; }
+.callout.tip{ background:#22344d; border-left-color:var(--green); color:#bfe9cd; background:#1c2b22; border-left-color:var(--green); }
+.callout b{color:#fff;}
+
+.role-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin:16px 0 4px; }
+.role-card{ border-radius:14px; padding:16px 15px; color:#fff; }
+.role-card .r-name{font-family:'Google Sans',sans-serif; font-weight:700; font-size:14px;}
+.role-card .r-focus{font-size:12px; opacity:.92; margin-top:6px; line-height:1.4;}
+.r1{background:#4285F4;} .r2{background:#34A853;} .r3{background:#F09300;} .r4{background:#7B61FF;}
+
+.slide{ background:#1a1b1e; border:1px solid var(--line); border-radius:12px; padding:20px 22px; margin:14px 0; position:relative; }
+.slide::before{ content:"SLIDE"; position:absolute; top:10px; right:14px; font-size:9px; letter-spacing:.12em; color:#5f6368; font-weight:700; }
+.slide .slide-title{ color:var(--blue); font-size:16.5px; font-weight:700; margin:0 0 10px; }
+.slide ul{margin:0; padding-left:20px;}
+.slide li{margin-bottom:7px; font-size:14px; color:#c7cbd1;}
+.slide li::marker{color:var(--blue);}
+.slide.accent-blue .slide-title{color:var(--blue);}
+.slide.accent-red .slide-title{color:var(--red);}
+.slide.accent-yellow .slide-title{color:var(--yellow);}
+.slide.accent-green .slide-title{color:var(--green);}
+.slide.accent-purple .slide-title{color:var(--purple);}
+.slide-row{display:grid; gap:16px;}
+.slide-row.cols-2{grid-template-columns:1fr 1fr;}
+
+.figure{ margin:18px 0; border-radius:14px; overflow:hidden; border:1px solid var(--line); background:#000; }
+.figure img{ display:block; width:100%; }
+.figure figcaption{ padding:10px 16px; font-size:12.5px; color:var(--sub); background:#1a1b1e; border-top:1px solid var(--line); }
+.figure-row{ display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:18px 0; }
+.figure-row .figure{ margin:0; }
+@media (max-width:700px){ .figure-row{grid-template-columns:1fr;} .slide-row.cols-2{grid-template-columns:1fr;} }
+
+.purpose-grid{ display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin:16px 0 4px; }
+.purpose-card{ border-radius:14px; padding:14px 13px; color:#fff; min-height:78px; display:flex; align-items:flex-end; box-shadow:0 2px 6px rgba(0,0,0,.12); font-family:'Google Sans',sans-serif; font-weight:700; font-size:13px; }
+.p1{background:#4285F4;} .p2{background:#34A853;} .p3{background:#F09300;} .p4{background:#7B61FF;} .p5{background:#EA4335;}
+@media (max-width:700px){ .purpose-grid{grid-template-columns:repeat(2,1fr);} }
+
+.exam-list{ list-style:none; margin:0; padding:0; }
+.exam-list li{ display:flex; gap:12px; align-items:flex-start; padding:12px 4px; border-bottom:1px solid var(--line); font-size:14.5px; color:#dfe1e5; }
+.exam-list li:last-child{ border-bottom:none; }
+.exam-list .chk{ flex:none; width:20px; height:20px; border-radius:6px; border:2px solid var(--yellow); margin-top:2px; }
+.exam-list b{ color:#fff; }
+
+/* ===== MCQ Practice Quiz ===== */
+.mcq-quiz-header{ display:flex; align-items:center; justify-content:space-between; gap:12px; background:#1a1b1e; border:1px solid var(--line); border-radius:12px; padding:12px 18px; margin:16px 0 20px; flex-wrap:wrap; }
+.mcq-quiz-header #mcqScore{ font-family:'Google Sans',sans-serif; font-weight:700; font-size:15px; color:#fff; }
+.mcq-reset-btn{ background:#2c2d30; border:1px solid var(--line); color:var(--ink); font-size:12.5px; font-weight:600; padding:8px 14px; border-radius:9px; cursor:pointer; }
+.mcq-reset-btn:hover{ background:#3a3b3e; }
+.mcq-card{ background:#1a1b1e; border:1px solid var(--line); border-radius:14px; padding:18px 20px; margin-bottom:16px; }
+.mcq-card:last-child{ margin-bottom:0; }
+.mcq-q{ font-family:'Google Sans',sans-serif; font-size:15px; font-weight:600; color:#fff; margin:0 0 14px; line-height:1.5; }
+.mcq-q .mcq-num{ color:var(--purple); margin-right:6px; }
+.mcq-options{ display:flex; flex-direction:column; gap:9px; }
+.mcq-opt{ display:flex; align-items:center; gap:10px; text-align:left; background:#202124; border:1px solid var(--line); color:#dfe1e5; font-size:13.5px; padding:11px 14px; border-radius:10px; cursor:pointer; transition:background .15s ease, border-color .15s ease; }
+.mcq-opt:hover:not(.locked){ background:#2c2d30; border-color:#5f6368; }
+.mcq-opt .mcq-letter{ flex:none; width:22px; height:22px; border-radius:50%; background:#2c2d30; color:var(--sub); font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; }
+.mcq-opt.correct{ background:#16301f; border-color:var(--green); color:#c8f5d6; }
+.mcq-opt.correct .mcq-letter{ background:var(--green); color:#0d1f14; }
+.mcq-opt.wrong{ background:#33191c; border-color:var(--red); color:#f7c6c9; }
+.mcq-opt.wrong .mcq-letter{ background:var(--red); color:#fff; }
+.mcq-opt.locked{ cursor:default; }
+.mcq-note{ margin-top:12px; padding-top:12px; border-top:1px dashed var(--line); font-size:12.5px; color:var(--sub); display:none; }
+.mcq-note.show{ display:block; }
+.mcq-note b{ color:#a8c7fa; }
+
+table.gtable{ width:100%; border-collapse:collapse; margin-top:6px; font-size:14px; }
+table.gtable th{ text-align:left; font-family:'Google Sans',sans-serif; font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--sub); padding:10px 12px; border-bottom:2px solid var(--line); }
+table.gtable td{ padding:11px 12px; border-bottom:1px solid var(--line); color:#dfe1e5; vertical-align:top; }
+table.gtable tr:last-child td{ border-bottom:none; }
+table.gtable td.acr{ font-family:'Roboto Mono',monospace; color:var(--blue); font-weight:700; white-space:nowrap; }
+
+table.ctable{ width:100%; border-collapse:collapse; font-size:13.5px; min-width:520px; }
+table.ctable th{ background:#1a1b1e; text-align:left; font-family:'Google Sans',sans-serif; font-size:12px; color:#a8c7fa; padding:12px 14px; border-bottom:1px solid var(--line); white-space:nowrap; }
+table.ctable td{ padding:12px 14px; border-bottom:1px solid var(--line); color:#c7cbd1; }
+table.ctable tr:last-child td{ border-bottom:none; }
+table.ctable td.row-head{ font-weight:700; color:#fff; white-space:nowrap; }
+table.ctable tr:hover td{ background:#1e1f22; }
+
+nav.toc .toc-divider{ margin:10px 10px 6px; border-top:1px solid var(--line); padding-top:10px; font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--sub); font-weight:500; }
+
+/* ===== Collapse / expand accordion (beyond-the-lesson sections) ===== */
+.section.collapsible .kicker{ cursor:pointer; user-select:none; }
+.collapse-toggle{
+  display:flex; align-items:center; justify-content:center; flex:none;
+  width:32px; height:32px; border-radius:9px; border:1px solid var(--line);
+  background:#1a1b1e; color:var(--sub); cursor:pointer; padding:0;
+}
+.collapse-toggle:hover{ background:#2c2d30; color:var(--ink); }
+.collapse-toggle .chevron{ display:inline-block; font-size:13px; transition:transform .25s ease; }
+.collapse-toggle[aria-expanded="true"] .chevron{ transform:rotate(180deg); }
+.collapse-body{ max-height:0; overflow:hidden; opacity:0; transition:max-height .35s ease, opacity .3s ease; }
+.collapse-body.open{ opacity:1; }
+
+/* ===== Sinhala Vocabulary Glossary ===== */
+.vocab-grid{ display:flex; flex-direction:column; gap:22px; margin-top:6px; }
+.vocab-card{ background:#1a1b1e; border:1px solid var(--line); border-radius:14px; overflow:hidden; }
+.vocab-header{ display:flex; align-items:center; gap:14px; padding:18px 22px 14px; border-bottom:1px solid var(--line); background:#202124; }
+.vocab-word{ font-family:'Google Sans',sans-serif; font-size:21px; font-weight:700; color:#a8c7fa; }
+.vocab-pos{ font-size:12px; color:var(--sub); font-style:italic; background:#2c2d30; padding:3px 9px; border-radius:20px; margin-left:4px; align-self:center; }
+.vocab-body{ padding:16px 22px; }
+.vocab-meanings{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px; }
+.vocab-en{ background:#1c2b3e; border-left:3px solid var(--blue); border-radius:8px; padding:12px 14px; }
+.vocab-si{ background:#1c2b22; border-left:3px solid var(--green); border-radius:8px; padding:12px 14px; }
+.vocab-lang-label{ font-size:10px; letter-spacing:.12em; text-transform:uppercase; font-weight:700; margin-bottom:6px; display:block; }
+.vocab-en .vocab-lang-label{ color:#5b9cf8; }
+.vocab-si .vocab-lang-label{ color:#7cc99a; }
+.vocab-en p{ color:#a8c7fa; font-size:13.5px; margin:0; line-height:1.55; }
+.vocab-si p{ color:#d3e9db; font-size:14.5px; margin:0; line-height:1.6; font-family:'Noto Sans Sinhala','Roboto',sans-serif; }
+.vocab-sentences-head{ font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--sub); font-weight:700; margin-bottom:10px; display:flex; align-items:center; gap:8px; }
+.vocab-sentences-head::after{ content:''; flex:1; height:1px; background:var(--line); }
+.vocab-sentences{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:7px; }
+.vocab-sentences li{ display:flex; gap:10px; align-items:flex-start; font-size:13.5px; color:#c7cbd1; line-height:1.55; }
+.vocab-tag{ flex:none; font-size:9.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; padding:2px 7px; border-radius:12px; margin-top:2px; white-space:nowrap; }
+.tag-daily{ background:#2a2b2e; color:#9aa0a6; }
+.tag-cyber{ background:#3a2530; color:#f3b8c2; }
+.tag-net{ background:#1c2b3e; color:#a8c7fa; }
+.tag-hw{ background:#2b2510; color:#fdd663; }
+.tag-sw{ background:#1c2b22; color:#81c995; }
+.vocab-hl{ color:#fff; font-weight:600; }
+@media (max-width:700px){ .vocab-meanings{grid-template-columns:1fr;} }
+
+.chip-row{display:flex; flex-wrap:wrap; gap:8px; margin:14px 0 4px;}
+.chip{ background:#2c2d30; border:1px solid var(--line); color:#dfe1e5; font-size:12.5px; padding:6px 12px; border-radius:16px; }
+
+.grammar-point{ border:1px solid var(--line); border-radius:12px; padding:16px 18px; margin-bottom:14px; background:#1a1b1e; }
+.grammar-point:last-child{margin-bottom:0;}
+.grammar-point .g-name{ font-family:'Google Sans',sans-serif; font-weight:700; font-size:14.5px; color:var(--blue); margin-bottom:6px; display:flex; align-items:center; gap:8px; }
+.grammar-point .g-name .g-tag{ font-size:10px; letter-spacing:.06em; text-transform:uppercase; background:#22344d; color:#a8c7fa; padding:3px 8px; border-radius:8px; font-weight:600; }
+.grammar-point p{ font-size:14px; color:#c7cbd1; margin:0 0 8px; }
+.grammar-point ul{ margin:0; padding-left:18px; }
+.grammar-point li{ font-size:13.5px; color:#dfe1e5; margin-bottom:5px; }
+.grammar-point li:last-child{margin-bottom:0;}
+.grammar-point li .ex-en{ color:#e8eaed; }
+.grammar-point li .ex-si{ display:block; color:#9aa0a6; font-size:12px; margin-top:2px; }
+
+table.mistake-table{ width:100%; border-collapse:collapse; margin-top:6px; font-size:14px; }
+table.mistake-table th{ text-align:left; font-family:'Google Sans',sans-serif; font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--sub); padding:10px 12px; border-bottom:2px solid var(--line); }
+table.mistake-table td{ padding:12px; border-bottom:1px solid var(--line); vertical-align:top; font-size:13.5px; }
+table.mistake-table tr:last-child td{ border-bottom:none; }
+table.mistake-table td.wrong{ color:var(--red); }
+table.mistake-table td.wrong::before{ content:"\2717  "; }
+table.mistake-table td.right{ color:var(--green); }
+table.mistake-table td.right::before{ content:"\2713  "; }
+table.mistake-table td.note{ color:#9aa0a6; font-size:12.5px; }
+.mistake-table-wrap{ overflow-x:auto; margin:8px 0 4px; border:1px solid var(--line); border-radius:12px; }
+table.mistake-table{min-width:560px;}
+
+footer{ text-align:center; color:var(--sub); font-size:12.5px; padding:20px 0 50px; }
+.back-top{ display:inline-block; margin-top:10px; font-size:12px; color:var(--blue); text-decoration:none; }
+
+@media (max-width:900px){
+  .hero{padding:40px 20px 30px;} .hero h1{font-size:24px;} .hero p.lead{font-size:14.5px;}
+  .layout{grid-template-columns:1fr; margin-top:20px;}
+  .mobile-bar{display:flex;}
+  .hero-search-row{ display:block; }
+  .hero-find-col{ margin-top:10px; }
+  nav.toc{ display:none; }
+  nav.toc.drawer-open{ display:block; position:fixed; top:0; left:0; bottom:0; z-index:50; width:82%; max-width:320px; max-height:none; border-radius:0; box-shadow:2px 0 24px rgba(0,0,0,.18); padding:18px 8px 24px; animation:slideIn .22s ease; overflow:auto; }
+  nav.toc.drawer-open .toc-head{padding:8px 16px 14px;}
+  nav.toc a{padding:12px 16px; font-size:14.5px;}
+  .section{padding:22px 18px;}
+  .role-grid{grid-template-columns:1fr 1fr;}
+  .path-nav{grid-template-columns:1fr; }
+  .path-btn.prev, .path-btn.next{ justify-content:center; text-align:center; }
+  .path-btn.prev .p-text, .path-btn.next .p-text{ align-items:center; }
+  .bottom-nav{grid-template-columns:1fr;}
+}
+@media (max-width:400px){ nav.toc.drawer-open{width:88%;} }
+@media (max-width:560px){
+  .dline{flex-direction:column;}
+  .dline .who{width:auto; align-self:flex-start; padding:3px 10px;}
+  table.vtable{min-width:420px;}
+}
+
+/* ===== Sinhala translation toggles ===== */
+.si-toggle{ display:inline-flex; align-items:center; gap:7px; background:#2a2b2e; border:1px solid var(--line); color:#a8c7fa; font-family:'Roboto',sans-serif; font-weight:500; font-size:12.5px; padding:7px 13px; border-radius:20px; cursor:pointer; white-space:nowrap; transition:background .15s ease, border-color .15s ease; }
+.si-divider{ display:flex; align-items:center; gap:14px; margin:26px 0 0; }
+.si-divider::before, .si-divider::after{ content:''; flex:1; height:1px; background:var(--line); }
+.si-toggle:hover{ background:#33343a; border-color:#5f6368; }
+.si-toggle .flag{ font-size:13px; }
+.si-toggle .arrow{ display:inline-block; transition:transform .2s ease; font-size:10px; }
+.si-toggle[aria-expanded="true"] .arrow{ transform:rotate(180deg); }
+.si-panel{ display:none; background:#1c2b22; border:1px solid #2f5b41; border-left:4px solid var(--green); border-radius:10px; padding:16px 20px; margin-top:14px; font-size:14.5px; color:#d3e9db; }
+.si-panel.open{ display:block; animation:fadeSlide .18s ease; }
+.si-panel p{ color:#d3e9db; font-size:14.5px; margin:0 0 10px; }
+.si-panel p:last-child{ margin-bottom:0; }
+.si-panel .si-label{ font-family:'Roboto',sans-serif; font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:#7cc99a; font-weight:700; margin-bottom:8px; display:block; }
+@keyframes fadeSlide{ from{opacity:0; transform:translateY(-4px);} to{opacity:1; transform:translateY(0);} }
+
+
+/* ===== Image lightbox (click to enlarge) ===== */
+.figure img{ cursor:zoom-in; }
+.lb-overlay{ position:fixed; inset:0; z-index:1000; display:none; align-items:center; justify-content:center; flex-direction:column; gap:12px; background:rgba(10,11,13,.92); padding:24px; cursor:zoom-out; }
+.lb-overlay.open{ display:flex; animation:lbFade .18s ease; }
+.lb-overlay img{ max-width:96vw; max-height:84vh; object-fit:contain; border-radius:10px; box-shadow:0 8px 40px rgba(0,0,0,.6); background:#fff; animation:lbZoom .2s ease; }
+.lb-caption{ color:#c7cbd1; font-size:13.5px; text-align:center; max-width:90vw; }
+.lb-close{ position:fixed; top:14px; right:16px; width:40px; height:40px; border-radius:50%; border:1px solid #5f6368; background:#2a2b2e; color:#e8eaed; font-size:22px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.lb-close:hover{ background:#3c4043; }
+.lb-nav{ position:fixed; top:50%; transform:translateY(-50%); width:48px; height:48px; border-radius:50%; border:1px solid #5f6368; background:rgba(42,43,46,.92); color:#e8eaed; font-size:26px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center; z-index:2; padding:0 0 3px; }
+.lb-nav:hover{ background:#3c4043; }
+.lb-prev{ left:14px; } .lb-next{ right:14px; }
+.lb-count{ color:#9aa0a6; font-size:12.5px; letter-spacing:.04em; }
+@media (max-width:700px){
+  .lb-overlay{ padding:16px 12px 92px; }
+  .lb-overlay img{ max-height:68vh; }
+  .lb-nav{ top:auto; bottom:22px; transform:none; width:46px; height:46px; font-size:24px; }
+  .lb-prev{ left:calc(50% - 92px); right:auto; }
+  .lb-next{ right:calc(50% - 92px); left:auto; }
+  .lb-count{ position:fixed; bottom:34px; left:50%; transform:translateX(-50%); font-size:13px; }
+}
+@keyframes lbFade{ from{opacity:0;} to{opacity:1;} }
+@keyframes lbZoom{ from{transform:scale(.94);} to{transform:scale(1);} }
+
+/* ===== Practice terminal (page 08) ===== */
+.tm-term{background:#0d0e10;border:1px solid var(--line);border-radius:12px;overflow:hidden;margin:6px 0}
+.tm-bar{display:flex;align-items:center;gap:7px;padding:9px 14px;background:#1a1b1e;border-bottom:1px solid var(--line);font-size:12px;color:var(--sub)}
+.tm-bar i{width:11px;height:11px;border-radius:50%;display:inline-block}
+.tm-bar button{margin-left:auto;background:#2c2d30;border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:3px 10px;cursor:pointer;font-size:12px}
+#tmScreen{font-family:'Roboto Mono',monospace;font-size:13.5px;line-height:1.55;height:330px;overflow-y:auto;padding:12px 14px;cursor:text;white-space:pre-wrap;word-break:break-all}
+.tm-pr{color:var(--green)}.tm-pp{color:var(--blue)}.tm-d{color:#6ea8ff;font-weight:500}.tm-dim{color:var(--sub)}
+.tm-inline{display:flex;gap:8px}
+#tmCmd{flex:1;background:transparent;border:0;outline:0;color:var(--ink);font:inherit;padding:0;min-width:0}
+.tm-hint{font-size:13px;color:var(--sub);margin:6px 2px}
+.tm-chal{list-style:none;padding:0;margin:10px 0 0}
+.tm-chal li{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;background:#1a1b1e;font-size:14px}
+.tm-chal .tick{flex:none;width:22px;height:22px;border-radius:50%;border:2px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:13px;color:#131417}
+.tm-chal li.done{border-color:#2f5a3d}.tm-chal li.done .tick{background:var(--green);border-color:var(--green)}
+.tm-chal .h{color:var(--sub);font-size:12.5px}
+.tm-prog{font-size:13px;color:var(--sub);margin-top:6px}
+@media(max-width:560px){#tmScreen{font-size:12.5px;height:300px}}
+
+/* ===== Back-to-top button (desktop + mobile) ===== */
+.to-top{ position:fixed; right:22px; bottom:22px; bottom:calc(22px + env(safe-area-inset-bottom,0px)); z-index:35; display:flex; align-items:center; justify-content:center; width:48px; height:48px; padding:0; border-radius:50%; border:1px solid #5f6368; background:#000; color:#fff; cursor:pointer; box-shadow:0 6px 20px rgba(0,0,0,.6); opacity:0; visibility:hidden; transform:translateY(14px); transition:opacity .25s ease, transform .25s ease, visibility .25s, background .15s ease; -webkit-tap-highlight-color:transparent; }
+.to-top.show{ opacity:1; visibility:visible; transform:none; }
+.to-top:hover{ background:#2c2d30; }
+.to-top:active{ transform:scale(.96); }
+@media (max-width:900px){ .to-top{ right:14px; bottom:calc(16px + env(safe-area-inset-bottom,0px)); } }
+
+/* ===== Keyboard focus (visible only for keyboard users) ===== */
+a:focus-visible, button:focus-visible, [tabindex]:focus-visible{ outline:2px solid var(--blue); outline-offset:2px; }
+button:focus:not(:focus-visible), a:focus:not(:focus-visible){ outline:none; }
+.toc-search input:focus{ border-color:var(--blue); }
+
+/* ===== Mobile: sticky top bar must not cover headings after anchor jumps ===== */
+@media (max-width:900px){ .section, .group{ scroll-margin-top:76px; } }
+
+/* ===== Respect reduced-motion setting ===== */
+@media (prefers-reduced-motion: reduce){
+  html{ scroll-behavior:auto; }
+  *,*::before,*::after{ animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="mobile-bar" id="mobileBar">
+  <span class="m-title">08. Navigating Directories &amp; Tab Completion</span>
+  <button type="button" class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="toc" aria-label="Open section menu">
+    <span></span>
+  </button>
+</div>
+<div class="toc-backdrop" id="tocBackdrop"></div>
+
+<div class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow">Operating Systems Design · Linux Administration</span>
+    <h1>08. Navigating Directories &amp; Tab Completion</h1>
+    <p class="lead">ls and its options, hidden files, cd and paths, case sensitivity, the manual, and Tab completion — combining the university slides with Linux Tutorial 6 into revision notes, tables, a live practice terminal and exam-style Q&amp;A.</p>
+    <div class="hero-meta"><span><span class="dot"></span>Linux Administration</span><span><span class="dot"></span>Slides + Linux Tutorial 6 (YouTube)</span><span><span class="dot"></span>7 sections</span></div>
+
+    <div class="hero-search-row">
+      <div class="site-search" id="siteSearch">
+        <span class="s-icon">🔍</span>
+        <input type="text" id="topicJump" placeholder="Search topics… e.g. ls, hidden files, tab" autocomplete="off">
+        <button type="button" class="s-clear" id="jumpClear" aria-label="Clear search">✕</button>
+        <div class="s-dropdown" id="jumpDropdown"></div>
+      </div>
+
+      <div class="hero-find-col">
+        <div class="site-search find-page-search" id="heroFindWrap">
+          <span class="s-icon">📍</span>
+          <input type="text" id="heroFindInput" placeholder="Find on this page…" autocomplete="off">
+          <button type="button" class="s-clear" id="heroFindClear" aria-label="Clear search">✕</button>
+        </div>
+        <div class="find-page-nav" id="heroFindNav">
+          <span id="heroSearchCount">0 / 0</span>
+          <div class="snav-btns">
+            <button type="button" id="heroSearchPrev" aria-label="Previous match">↑</button>
+            <button type="button" id="heroSearchNext" aria-label="Next match">↓</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="path-nav">
+    <a class="path-btn prev" href="07-emerging-technologies.html"><span class="p-arrow">←</span><span class="p-text"><span class="p-kicker">Previous</span><span class="p-title">07. Emerging Tech</span></span></a>
+    <a class="path-btn index" href="comp40050-index.html"><span class="p-text"><span class="p-kicker">All Topics</span><span class="p-title">🏠 Main Index</span></span></a>
+    <span class="path-spacer"></span>
+  </div>
+</div>
+
+<div class="layout">
+  <nav class="toc" id="toc">
+    <div class="toc-head">On this page <button type="button" class="drawer-close" id="drawerClose" aria-label="Close menu">✕</button></div>
+    <div class="toc-search">
+      <div class="toc-search-box">
+        <span class="s-icon">🔍</span>
+        <input type="text" id="pageSearchInput" placeholder="Find on this page…" autocomplete="off">
+        <button type="button" class="s-clear" id="pageSearchClear" aria-label="Clear search">✕</button>
+      </div>
+      <div class="toc-search-nav" id="searchNav">
+        <span id="searchCount">0 / 0</span>
+        <div class="snav-btns">
+          <button type="button" id="searchPrev" aria-label="Previous match">↑</button>
+          <button type="button" id="searchNext" aria-label="Next match">↓</button>
+        </div>
+      </div>
+    </div>
+    <a href="#ls">1. Listing with ls</a><a href="#hidden">2. Hidden Files</a><a href="#options">3. Command Options</a><a href="#cd">4. Changing Directories</a><a href="#manual">5. Case Sensitivity &amp; Manual</a><a href="#tab">6. Tab Completion &amp; touch</a><a href="#practice">7. 🖥️ Practice Terminal</a>
+    <div class="toc-divider">Beyond the lesson</div>
+    <a href="#commands">Command Reference</a><a href="#exam">What to Remember for the Exam</a><a href="#glossary">Glossary — Terms &amp; Meanings</a><a href="#comparison">Comparison Tables</a><a href="#sinhala-vocab">🇱🇰 Sinhala Vocabulary</a><a href="#mcq-practice">📝 MCQ Practice Test (30 Qs)</a>
+  </nav>
+  <main>
+    <section class="section" id="ls">
+      <div class="kicker">
+        <div class="kicker-left"><div class="num-badge" style="background:var(--blue)">1</div><h2>Listing Contents with ls</h2></div>
+      </div>
+      <p class="lede">Start from your home directory: <code>cd</code> on its own always takes you home, and <code>pwd</code> prints where you are. Then <code>ls</code> shows what is inside.</p>
+      <div class="slide"><div class="slide-title">Reading the output</div><ul><li><b>pwd</b> prints the <b>full path</b> of the working directory; the first slash is the <b>root</b> directory (e.g. <code>/home/sysadmin</code>).</li><li><b>ls</b> lists the contents of the current directory, in <b>alphabetical order</b> by default.</li><li>Many distros <b>colour</b> the names: white = standard file, <b>blue = directory</b>, cyan = symbolic link, green = executable, red = archive.</li></ul></div><div class="figure-row"><div class="figure"><img src="assets/year-1/2-computer-arc/2-operating-os/8-navigating/01-pwd-demo.jpg" alt="DEMO: print working directory — pwd outputs /home/sysadmin"><figcaption>pwd — outputs the full path of the working directory.</figcaption></div><div class="figure"><img src="assets/year-1/2-computer-arc/2-operating-os/8-navigating/02-ls-demo.jpg" alt="DEMO: list files in directory — ls prints Desktop Documents Downloads Music Pictures Public Templates Videos"><figcaption>ls — contents of the current directory, alphabetical by default.</figcaption></div></div><div class="figure"><img src="assets/year-1/2-computer-arc/2-operating-os/8-navigating/03-ls-colour-coding.jpg" alt="ls /etc output with colour coding: white standard file, blue directory, cyan symbolic link, green executable, red archive"><figcaption>Colour coding — blue: directory, white: standard file, cyan: symbolic link, green: executable, red: archive.</figcaption></div><div class="table-wrap"><table class="ctable"><thead><tr><th>What do you want to do?</th><th>Sample command</th></tr></thead><tbody><tr><td class="row-head">List the current directory</td><td><code>ls</code></td></tr><tr><td class="row-head">List a directory using a relative path</td><td><code>ls Documents/School</code></td></tr><tr><td class="row-head">List a directory using an absolute path</td><td><code>ls /usr</code></td></tr><tr><td class="row-head">List several directories at once</td><td><code>ls /usr ~ Documents</code> — names separated by spaces</td></tr></tbody></table></div><div class="figure"><img src="assets/year-1/2-computer-arc/2-operating-os/8-navigating/10-ls-specific-directories.jpg" alt="DEMO: list files in directory, specific directories: ls, ls Documents/School, ls /usr, ls /usr ~ Documents"><figcaption>Arguments choose <i>which</i> directories to list — relative, absolute, or several separated by spaces.</figcaption></div><div class="callout tip"><b>Exam tip:</b> Know the three starter commands — <b>pwd</b> (where am I?), <b>cd</b> (move), <b>ls</b> (what is here?).</div>
+      <div class="si-divider"><button type="button" class="si-toggle" data-target="si-ls" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
+      <div class="si-panel" id="si-ls">
+        <span class="si-label">සිංහල පරිවර්තනය</span>
+        <p class="si"><b>pwd</b> මගින් ඔබ සිටින directory එකේ සම්පූර්ණ මාර්ගය පෙන්වයි; පළමු slash එක <b>root</b> directory එක දක්වයි. <b>ls</b> මගින් වත්මන් directory එකේ ඇති දේ පෙරනිමියෙන් අකාරාදී පිළිවෙලට පෙන්වයි. <b>ls Documents/School</b> (relative), <b>ls /usr</b> (absolute) වැනි මාර්ග දුන් විට ඒ directory පෙන්වයි; කිහිපයක් space එකකින් වෙන් කර දිය හැක (<b>ls /usr ~ Documents</b>). වර්ණ: සුදු = සාමාන්‍ය file, <b>නිල්</b> = directory, cyan = symbolic link, කොළ = executable, රතු = archive.</p>
+      </div>
+    </section>
+    <section class="section" id="hidden">
+      <div class="kicker">
+        <div class="kicker-left"><div class="num-badge" style="background:var(--green)">2</div><h2>Hidden Files</h2></div>
+      </div>
+      <p class="lede">Some entries are not shown by plain <code>ls</code>. In Linux, any name that starts with a dot (full stop) is hidden.</p>
+      <div class="slide"><div class="slide-title">Hidden (dot) files</div><ul><li>Examples: <code>.bashrc</code>, <code>.profile</code>, <code>.bash_history</code>, <code>.bash_logout</code>.</li><li>Show them with <code>ls -a</code> (long form <code>ls --all</code>) or <code>ls -la</code> for the detailed view.</li><li>Some rarely-used system files are hidden to <b>reduce clutter</b> — leave them alone unless you know what you are doing.</li></ul></div><div class="figure"><img src="assets/year-1/2-computer-arc/2-operating-os/8-navigating/04-ls-more-options.jpg" alt="More ls options: ls -lh Documents for human readable sizes, ls -la for hidden files, ls -lR ~ for sub-directories"><figcaption>More options — <code>-lh</code> human-readable sizes, <code>-la</code> hidden files, <code>-lR</code> include sub-directories.</figcaption></div><div class="callout warn"><b>GUI equivalent:</b> in the file manager, open the menu (three bars) and choose <b>Show hidden files</b> to see the same dot-files.</div>
+      <div class="si-divider"><button type="button" class="si-toggle" data-target="si-hidden" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
+      <div class="si-panel" id="si-hidden">
+        <span class="si-label">සිංහල පරිවර්තනය</span>
+        <p class="si">නමක් <b>තිතකින් (.)</b> ආරම්භ වුවහොත් එය සැඟවුණු (hidden) file එකකි, උදා: .bashrc, .profile, .bash_history. <b>ls -a</b> හෝ <b>ls -la</b> මගින් ඒවා දැකිය හැක. සමහර පද්ධති file අවුල් අඩු කිරීමට සඟවා ඇත; ඒවා අනවශ්‍යව වෙනස් නොකරන්න. GUI එකේදී මෙනුවෙන් <b>Show hidden files</b> තෝරන්න.</p>
+      </div>
+    </section>
+    <section class="section" id="options">
+      <div class="kicker">
+        <div class="kicker-left"><div class="num-badge" style="background:var(--yellow)">3</div><h2>Command Options</h2></div>
+      </div>
+      <p class="lede">Options (also called flags) change how a command behaves. Short options use one hyphen; long options use two. Arguments say <i>where</i> to look; options say <i>how</i> to display.</p>
+      <div class="table-wrap"><table class="ctable"><thead><tr><th>What do you want?</th><th>Command</th><th>Notes</th></tr></thead><tbody><tr><td class="row-head">Hidden files</td><td><code>ls -a</code> · <code>ls --all</code></td><td>Short and long form are identical</td></tr><tr><td class="row-head">Hidden + long, combined</td><td><code>ls -a -l</code> · <code>ls -al</code> · <code>ls -la</code></td><td>All identical — letter order does not matter</td></tr><tr><td class="row-head">Long listing</td><td><code>ls -l /var/log</code></td><td>Permissions, owner, size, timestamp, name</td></tr><tr><td class="row-head">Reverse order</td><td><code>ls -lr Documents</code> · <code>ls -rl Documents</code></td><td>Order of options is immaterial</td></tr><tr><td class="row-head">Date order</td><td><code>ls -lt /etc</code></td><td>Newest first</td></tr><tr><td class="row-head">Size order</td><td><code>ls -lS /var/log</code></td><td><b>Uppercase</b> S</td></tr><tr><td class="row-head">Human readable</td><td><code>ls -lh Documents</code></td><td>Sizes in K rather than bytes</td></tr><tr><td class="row-head">Include sub-directories</td><td><code>ls -lR ~</code></td><td><b>Uppercase</b> R = recursive (not <code>-r</code> = reverse)</td></tr></tbody></table></div><div class="figure"><img src="assets/year-1/2-computer-arc/2-operating-os/8-navigating/05-ls-long-listing.jpg" alt="DEMO: ls -l /var/log long listing showing permissions, owner, group, size, date and name"><figcaption>ls -l /var/log — additional details of each file (permissions, file sizes).</figcaption></div><div class="figure"><img src="assets/year-1/2-computer-arc/2-operating-os/8-navigating/06-long-listing-meaning.jpg" alt="Long listing explained: file type d or -, permissions, owners, file size in bytes, timestamp, name of file or directory"><figcaption>Reading one line: file type (d = directory, - = regular file), permissions, owner, size in bytes, timestamp, name.</figcaption></div><div class="figure"><img src="assets/year-1/2-computer-arc/2-operating-os/8-navigating/07-ls-display-options.jpg" alt="Display options table: ls -lr Documents reverse order, ls -lt /etc date order, ls -lS /var/log size order"><figcaption>Display options — the order of options is immaterial; note the uppercase S.</figcaption></div><div class="slide"><div class="slide-title">Remember</div><ul><li>Full-word options use <b>two</b> hyphens; shorthand uses <b>one</b> and can be stacked: <code>-al</code> = <code>-la</code> = <code>-a -l</code>.</li><li><code>-r</code> (reverse) and <code>-R</code> (recursive) are <b>different</b> options.</li><li><code>ls -l</code> line: <code>d</code> or <code>-</code>, permissions, links, owner, group, size, timestamp, name.</li></ul></div>
+      <div class="si-divider"><button type="button" class="si-toggle" data-target="si-options" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
+      <div class="si-panel" id="si-options">
+        <span class="si-label">සිංහල පරිවර්තනය</span>
+        <p class="si"><b>Options</b> යනු විධානයක හැසිරීම වෙනස් කරන අමතර අකුරු ය. කෙටි ආකාරය එක් හයිෆනයකින් (-a), දිගු ආකාරය හයිෆන් දෙකකින් (--all). <b>-l</b> විස්තරාත්මක ලැයිස්තුවක් දෙයි; <b>-r</b> ප්‍රතිලෝම, <b>-t</b> දිනය අනුව, <b>-S</b> ප්‍රමාණය අනුව, <b>-h</b> කියවීමට පහසු ප්‍රමාණ, <b>-R</b> උප-directories ද (recursive). Options වල අනුපිළිවෙල වැදගත් නැත.</p>
+      </div>
+    </section>
+    <section class="section" id="cd">
+      <div class="kicker">
+        <div class="kicker-left"><div class="num-badge" style="background:var(--red)">4</div><h2>Changing Directories with cd</h2></div>
+      </div>
+      <p class="lede"><code>cd</code> changes directory to the one given by the path. Where the path <i>starts</i> decides whether it is absolute or relative.</p>
+      <div class="table-wrap"><table class="ctable"><thead><tr><th>Move to…</th><th>Sample command</th><th>Type of path</th></tr></thead><tbody><tr><td class="row-head">Nested directory, relative</td><td><code>cd School/Art</code></td><td>Relative — no leading <code>/</code> or <code>~</code></td></tr><tr><td class="row-head">Nested directory from root</td><td><code>cd /home/sysadmin/Documents/School</code></td><td>Absolute from root</td></tr><tr><td class="row-head">Nested directory from home</td><td><code>cd ~/Documents/School/Math</code></td><td>Absolute from home</td></tr><tr><td class="row-head">Root directory</td><td><code>cd /</code></td><td>—</td></tr><tr><td class="row-head">Home directory</td><td><code>cd ~</code> · <code>cd</code></td><td>—</td></tr><tr><td class="row-head">Up one level</td><td><code>cd ..</code></td><td>—</td></tr><tr><td class="row-head">Up two levels</td><td><code>cd ../..</code></td><td>—</td></tr></tbody></table></div><div class="figure"><img src="assets/year-1/2-computer-arc/2-operating-os/8-navigating/08-cd-examples.jpg" alt="DEMO: changing directories examples: relative, absolute from root, absolute from home, root, home, up one level, up two levels"><figcaption>cd examples — starts with <code>/</code> = absolute from root; starts with <code>~</code> = absolute from home; otherwise relative.</figcaption></div><div class="slide"><div class="slide-title">Key points</div><ul><li><b>No output</b> means the move succeeded — check the <b>prompt</b> to see the current directory.</li><li>An error appears if the directory does not exist.</li><li>Use <code>pwd</code> any time to confirm where you are.</li></ul></div>
+      <div class="si-divider"><button type="button" class="si-toggle" data-target="si-cd" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
+      <div class="si-panel" id="si-cd">
+        <span class="si-label">සිංහල පරිවර්තනය</span>
+        <p class="si"><b>cd</b> යනු directory වෙනස් කරන විධානයයි. <b>/</b> න් ආරම්භ වන මාර්ගය root සිට (absolute); <b>~</b> න් ආරම්භ වන මාර්ගය home සිට; වෙනත් ඕනෑම මාර්ගයක් දැනට සිටින directory එකට සාපේක්ෂ (relative). <b>cd ..</b> එක් මට්ටමක් ඉහළට, <b>cd ../..</b> මට්ටම් දෙකක් ඉහළට. සාර්ථක නම් කිසිවක් print නොවේ — prompt එක බලන්න.</p>
+      </div>
+    </section>
+    <section class="section" id="manual">
+      <div class="kicker">
+        <div class="kicker-left"><div class="num-badge" style="background:var(--purple)">5</div><h2>Case Sensitivity &amp; the Manual</h2></div>
+      </div>
+      <p class="lede">Linux treats upper and lower case as different — for commands, options and names. When unsure, read the manual.</p>
+      <div class="figure"><img src="assets/year-1/2-computer-arc/2-operating-os/8-navigating/09-cd-case-sensitive.jpg" alt="DEMO: cd documents fails with No such file or directory because everything is case-sensitive; cd Documents succeeds and the prompt shows ~/Documents"><figcaption><code>cd documents</code> fails; <code>cd Documents</code> works — everything is case-sensitive, and the prompt then shows the new directory.</figcaption></div><div class="slide"><div class="slide-title">Two habits to build</div><ul><li><code>-l</code> and <code>-L</code> are <b>different</b> options; <code>Downloads</code> and <code>downloads</code> are <b>different</b> names.</li><li><code>man ls</code> opens the manual page for <code>ls</code> with every option; press <b>q</b> to quit.</li></ul></div><div class="callout tip"><b>Exam tip:</b> “Command not found” or “No such file or directory” is very often a capital-letter mistake.</div>
+      <div class="si-divider"><button type="button" class="si-toggle" data-target="si-manual" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
+      <div class="si-panel" id="si-manual">
+        <span class="si-label">සිංහල පරිවර්තනය</span>
+        <p class="si">Linux හි <b>case-sensitive</b> ය: <b>-l</b> සහ <b>-L</b> වෙනස් ය; <b>Downloads</b> සහ <b>downloads</b> ද වෙනස් ය. <b>cd documents</b> අසාර්ථක වන අතර <b>cd Documents</b> සාර්ථක වේ. විධානයක සවිස්තරාත්මක උපකාරය සඳහා <b>man ls</b> භාවිත කරන්න; man පිටුවෙන් ඉවත් වීමට <b>q</b> ඔබන්න.</p>
+      </div>
+    </section>
+    <section class="section" id="tab">
+      <div class="kicker">
+        <div class="kicker-left"><div class="num-badge" style="background:var(--blue)">6</div><h2>Tab Completion &amp; the touch Trap</h2></div>
+      </div>
+      <p class="lede">Press Tab to let the shell finish a name for you — faster typing and fewer typos.</p>
+      <div class="table-wrap"><table class="ctable"><thead><tr><th>You type</th><th>Matches</th><th>Result</th></tr></thead><tbody><tr><td class="row-head"><code>cd De</code> + Tab</td><td>Only <i>Desktop</i></td><td>Completes to <code>Desktop/</code></td></tr><tr><td class="row-head"><code>cd D</code> + Tab</td><td>Desktop, Documents, Downloads</td><td>Nothing happens</td></tr><tr><td class="row-head"><code>cd D</code> + Tab Tab</td><td>Same three</td><td>Lists all the options</td></tr><tr><td class="row-head"><code>cd Dow</code> + Tab <span class="dim">(Download &amp; Downloads exist)</span></td><td>Share the prefix <code>Download</code></td><td>Fills up to the shared part, then stops</td></tr></tbody></table></div><div class="callout tip"><b>Summary:</b> a single Tab fills in as far as it is certain; a double Tab shows the remaining choices. Type one more character to narrow it down.</div><div class="subhead"><span class="sub-dot" style="background:var(--red)"></span>Why it matters: the touch trap</div><div class="slide"><div class="slide-title">touch with a typo creates a new file</div><ul><li>Set-up from the video: <code>mkdir Download</code> (capital D) so <code>Download</code> and <code>Downloads</code> now sit side by side — <code>ls</code> confirms it.</li><li><code>touch Download</code> (using Tab) on a name that <b>exists</b> only <b>updates its timestamp</b>.</li><li><code>touch download</code> (lowercase d) names something that does <b>not</b> exist, so it <b>creates a new empty file</b> — and prints no error.</li><li>Check with <code>ls -l</code>: <code>Download</code> (directory) has the newer timestamp <i>and</i> a new <code>download</code> file appears.</li><li>Clean up: <code>rm download</code> removes the file; <code>rm Download</code> fails because it is a directory; <code>rm -r Download</code> removes it.</li></ul></div><div class="table-wrap"><table class="ctable"><thead><tr><th>Command</th><th>Name exists?</th><th>Result</th></tr></thead><tbody><tr><td class="row-head"><code>mkdir Download</code></td><td>—</td><td>Creates a directory with a capital D, beside <code>Downloads</code></td></tr><tr><td class="row-head"><code>touch Download</code> (via Tab)</td><td>Yes — a directory</td><td>Timestamp updated, nothing else changes</td></tr><tr><td class="row-head"><code>touch download</code> (typo)</td><td>No</td><td>New empty file created, no error</td></tr><tr><td class="row-head"><code>rm download</code></td><td>Yes — a file</td><td>File removed</td></tr><tr><td class="row-head"><code>rm Download</code></td><td>Yes — a directory</td><td>Error: Is a directory</td></tr><tr><td class="row-head"><code>rm -r Download</code></td><td>Yes — a directory</td><td>Directory and contents removed</td></tr></tbody></table></div><div class="callout warn"><b>Rule of thumb:</b> use Tab for every name you did not just create. The most common unnoticed mistake is <b>capitalisation</b>. Be careful with <code>rm -r</code> — there is no recycle bin.</div>
+      <div class="si-divider"><button type="button" class="si-toggle" data-target="si-tab" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
+      <div class="si-panel" id="si-tab">
+        <span class="si-label">සිංහල පරිවර්තනය</span>
+        <p class="si"><b>Tab</b> යතුර නම ස්වයංක්‍රීයව සම්පූර්ණ කරයි. ගැළපෙන්නේ එක් නමක් පමණක් නම් එය සම්පූර්ණ වේ (cd De → Desktop/). නම් කිහිපයක් ගැළපේ නම් පළමු Tab එකෙන් කිසිවක් නොවේ; <b>Tab දෙවරක්</b> ඔබා ගැළපෙන සියල්ල ලැයිස්තුගත කරන්න. තවත් අකුරක් ටයිප් කර තෝරන්න. <b>touch</b> උගුල: පවතින නමකට touch කළොත් timestamp එක පමණක් යාවත්කාලීන වේ; නමේ අකුරු වැරදුණොත් (උදා: downloads) <b>අලුත් හිස් file එකක්</b> හැදේ, error එකක් නොපෙන්වයි. Tab භාවිත කළොත් නම පවතින බව තහවුරු වේ. file මකන්න <b>rm</b>, directory මකන්න <b>rm -r</b>.</p>
+      </div>
+    </section>
+    <section class="section" id="practice">
+      <div class="kicker">
+        <div class="kicker-left"><div class="num-badge" style="background:var(--yellow)">7</div><h2>🖥️ Practice Terminal</h2></div>
+      </div>
+      <p class="lede">A simulated Ubuntu shell — nothing here touches a real system. Click the terminal and type. Supported: <code>pwd</code> <code>ls</code> <code>cd</code> <code>mkdir</code> <code>touch</code> <code>rm</code> <code>man ls</code> <code>clear</code> <code>help</code>, plus Tab and ↑/↓ history.</p>
+      <div class="tm-wrap">
+        <div class="tm-term">
+          <div class="tm-bar"><i style="background:#f28b82"></i><i style="background:#fdd663"></i><i style="background:#81c995"></i>&nbsp;user@ubuntu — simulated<button type="button" id="tmReset">↺ Reset</button></div>
+          <div id="tmScreen"><div id="tmOut"></div><div class="tm-inline"><span id="tmPs"></span><input id="tmCmd" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="terminal input"></div></div>
+        </div>
+        <div class="tm-hint">Tip: press Tab twice quickly when several names match.</div>
+        <ul class="tm-chal" id="tmChal"></ul>
+        <div class="tm-prog" id="tmProg"></div>
+      </div>
+    </section>
+
+    <!-- ===== Beyond the lesson ===== -->
+
+    <section class="section collapsible" id="commands">
+      <div class="kicker" data-toggle="commands">
+        <div class="kicker-left"><div class="num-badge" style="background:linear-gradient(135deg,#1a73e8,#7B61FF)">8</div><h2>Command Reference — Output / Effect</h2></div>
+        <button type="button" class="collapse-toggle" id="commands-toggle" aria-expanded="false" aria-controls="commands-body" aria-label="Expand section"><span class="chevron">▾</span></button>
+      </div>
+      <div class="collapse-body" id="commands-body">
+      <p class="lede">Every command from the video and the university slides in one place. <b>Globbing</b> (<code>*</code> <code>?</code> <code>[]</code>) and <code>echo</code> are covered on a separate page.</p><div class="table-wrap"><table class="ctable"><thead><tr><th>Command</th><th>Output / Effect</th><th>Source</th></tr></thead><tbody><tr><td class="row-head"><code>cd ~</code></td><td>Changes to the home directory to start from a known location</td><td>Video</td></tr><tr><td class="row-head"><code>pwd</code></td><td>Confirms you are in the home directory (prints the full working directory)</td><td>Video + slides</td></tr><tr><td class="row-head"><code>ls</code></td><td>Lists all visible files and directories, alphabetically</td><td>Video + slides</td></tr><tr><td class="row-head"><code>ls -a</code></td><td>Lists all files including hidden ones (starting with <code>.</code>)</td><td>Video</td></tr><tr><td class="row-head"><code>ls --all</code></td><td>Same as <code>ls -a</code> (long-form double-dash option)</td><td>Video</td></tr><tr><td class="row-head"><code>ls -l</code></td><td>Lists with details: permissions, owner, size, date modified</td><td>Video + slides</td></tr><tr><td class="row-head"><code>ls -a -l</code></td><td>Combines <code>-a</code> and <code>-l</code> flags separately</td><td>Video</td></tr><tr><td class="row-head"><code>ls -al</code></td><td>Combined shorthand — same as <code>ls -a -l</code></td><td>Video</td></tr><tr><td class="row-head"><code>ls -la</code></td><td>Same as <code>-al</code>, flags can be swapped</td><td>Video + slides</td></tr><tr><td class="row-head"><code>man ls</code></td><td>Opens the manual for <code>ls</code>; shows all flag descriptions (q to quit)</td><td>Video</td></tr><tr><td class="row-head"><code>mkdir Download</code></td><td>Creates a new directory named <code>Download</code> (capital D)</td><td>Video</td></tr><tr><td class="row-head"><code>ls</code></td><td>Confirms <code>Download</code> now exists alongside <code>Downloads</code></td><td>Video</td></tr><tr><td class="row-head"><code>touch Download</code></td><td>Updates the timestamp of the existing <code>Download</code> directory</td><td>Video</td></tr><tr><td class="row-head"><code>touch download</code></td><td>Creates a brand new file named <code>download</code> (lowercase)</td><td>Video</td></tr><tr><td class="row-head"><code>ls -l</code></td><td>Shows both <code>Download</code> (dir, newer timestamp) and <code>download</code> (new file)</td><td>Video</td></tr><tr><td class="row-head"><code>rm download</code></td><td>Removes the file named <code>download</code></td><td>Video</td></tr><tr><td class="row-head"><code>rm Download</code></td><td>Fails — cannot remove a directory this way</td><td>Video</td></tr><tr><td class="row-head"><code>rm -r Download</code></td><td>Recursively removes the <code>Download</code> directory</td><td>Video</td></tr><tr><td class="row-head"><code>Tab</code></td><td>Auto-completes up to the point of ambiguity</td><td>Video</td></tr><tr><td class="row-head"><code>Tab Tab</code></td><td>Shows all matching options for the current input</td><td>Video</td></tr><tr><td class="row-head"><code>ls Documents/School</code></td><td>Lists a directory using a relative path</td><td>Slides</td></tr><tr><td class="row-head"><code>ls /usr</code></td><td>Lists a directory using an absolute path</td><td>Slides</td></tr><tr><td class="row-head"><code>ls /usr ~ Documents</code></td><td>Lists several directories — names separated by spaces</td><td>Slides</td></tr><tr><td class="row-head"><code>ls -l /var/log</code></td><td>Long listing of a specific directory</td><td>Slides</td></tr><tr><td class="row-head"><code>ls -lr Documents</code></td><td>Reverse order (also <code>ls -rl</code> — order of options is immaterial)</td><td>Slides</td></tr><tr><td class="row-head"><code>ls -lt /etc</code></td><td>List in date order</td><td>Slides</td></tr><tr><td class="row-head"><code>ls -lS /var/log</code></td><td>List in size order (uppercase S)</td><td>Slides</td></tr><tr><td class="row-head"><code>ls -lh Documents</code></td><td>Human-readable sizes (K rather than bytes)</td><td>Slides</td></tr><tr><td class="row-head"><code>ls -lR ~</code></td><td>Include sub-directories (uppercase R = recursive; <code>-r</code> is reverse)</td><td>Slides</td></tr><tr><td class="row-head"><code>cd documents</code></td><td>Fails: <code>No such file or directory</code> — everything is case-sensitive</td><td>Slides</td></tr><tr><td class="row-head"><code>cd Documents</code></td><td>No output = success; the prompt now shows <code>~/Documents</code></td><td>Slides</td></tr><tr><td class="row-head"><code>cd School/Art</code></td><td>Move to a nested directory using a relative path</td><td>Slides</td></tr><tr><td class="row-head"><code>cd /home/sysadmin/Documents/School</code></td><td>Move using an absolute path from root</td><td>Slides</td></tr><tr><td class="row-head"><code>cd ~/Documents/School/Math</code></td><td>Move using an absolute path from home</td><td>Slides</td></tr><tr><td class="row-head"><code>cd /</code></td><td>Move to the root directory</td><td>Slides</td></tr><tr><td class="row-head"><code>cd ~ · cd</code></td><td>Move to the home directory</td><td>Slides</td></tr><tr><td class="row-head"><code>cd ..</code></td><td>Up one level</td><td>Slides</td></tr><tr><td class="row-head"><code>cd ../..</code></td><td>Up two levels</td><td>Slides</td></tr></tbody></table></div>
+      </div>
+    </section>
+
+    <section class="section collapsible" id="exam">
+      <div class="kicker" data-toggle="exam">
+        <div class="kicker-left"><div class="num-badge" style="background:var(--purple)">9</div><h2>What to Remember for the Exam</h2></div>
+        <button type="button" class="collapse-toggle" id="exam-toggle" aria-expanded="false" aria-controls="exam-body" aria-label="Expand section"><span class="chevron">▾</span></button>
+      </div>
+      <div class="collapse-body" id="exam-body">
+      <p class="lede">The exact facts this lesson loves to test — memorize these cold.</p><ul class="exam-list"><li><span class="chk"></span><span><b>pwd</b> prints the full path; the first <b>/</b> is the root directory.</span></li><li><span class="chk"></span><span><b>pwd</b> prints the current directory; <b>cd</b> alone returns to the home directory.</span></li><li><span class="chk"></span><span><b>ls</b> hides dot-files; <b>ls -a</b> / <b>--all</b> shows them. <b>ls -l</b> gives the long format.</span></li><li><span class="chk"></span><span><b>-al</b> = <b>-la</b> = <b>-a -l</b>; one hyphen for short options, two for long. <b>-r</b> reverse, <b>-t</b> time, <b>-S</b> size, <b>-h</b> human-readable, <b>-R</b> recursive.</span></li><li><span class="chk"></span><span>Path starting with <b>/</b> = absolute from root; <b>~</b> = absolute from home; anything else = relative. <b>cd ..</b> up one, <b>cd ../..</b> up two, no output = success.</span></li><li><span class="chk"></span><span>Linux is <b>case-sensitive</b>: <b>-l</b> ≠ <b>-L</b>, <b>Downloads</b> ≠ <b>downloads</b>.</span></li><li><span class="chk"></span><span><b>man ls</b> shows the manual; press <b>q</b> to exit.</span></li><li><span class="chk"></span><span><b>touch</b> on an existing name updates its timestamp; on a mistyped name it <b>creates a new empty file</b>. <b>rm</b> removes files; <b>rm -r</b> removes directories.</span></li><li><span class="chk"></span><span><b>Tab</b> = complete as far as unambiguous; <b>Tab Tab</b> = list candidates.</span></li></ul>
+      </div>
+    </section>
+
+    <section class="section collapsible" id="glossary">
+      <div class="kicker" data-toggle="glossary">
+        <div class="kicker-left"><div class="num-badge" style="background:#5f6368">10</div><h2>Glossary — Acronyms &amp; Meanings</h2></div>
+        <button type="button" class="collapse-toggle" id="glossary-toggle" aria-expanded="false" aria-controls="glossary-body" aria-label="Expand section"><span class="chevron">▾</span></button>
+      </div>
+      <div class="collapse-body" id="glossary-body">
+      <div class="table-wrap"><table class="gtable"><thead><tr><th>Term</th><th>Full term</th><th>Meaning</th></tr></thead><tbody><tr><td class="acr">pwd</td><td class="term-full">Print Working Directory</td><td>Prints the full path of the directory you are currently in.</td></tr><tr><td class="acr">ls</td><td class="term-full">List</td><td>Lists directory contents; add options such as -a and -l.</td></tr><tr><td class="acr">cd</td><td class="term-full">Change Directory</td><td>Moves to another directory; with no argument goes to home.</td></tr><tr><td class="acr">mkdir</td><td class="term-full">Make Directory</td><td>Creates a new directory.</td></tr><tr><td class="acr">man</td><td class="term-full">Manual</td><td>Opens the manual page for a command (e.g. man ls).</td></tr><tr><td class="acr">-a / --all</td><td class="term-full">All</td><td>ls option that also shows hidden (dot) entries.</td></tr><tr><td class="acr">-l</td><td class="term-full">Long format</td><td>ls option showing permissions, owner, size and date.</td></tr><tr><td class="acr">~</td><td class="term-full">Home directory</td><td>Shortcut for your home directory, e.g. /home/user.</td></tr><tr><td class="acr">..</td><td class="term-full">Parent directory</td><td>Refers to the directory one level up; cd .. moves there.</td></tr><tr><td class="acr">/</td><td class="term-full">Root directory</td><td>Top of the filesystem; paths starting with / are absolute.</td></tr><tr><td class="acr">-R / -r</td><td class="term-full">Recursive / reverse</td><td>-R lists sub-directories too; -r reverses the sort order.</td></tr><tr><td class="acr">-h</td><td class="term-full">Human readable</td><td>Shows sizes such as 4.0K instead of raw bytes.</td></tr><tr><td class="acr">touch</td><td class="term-full">Touch</td><td>Updates the timestamp of an existing file or directory, or creates a new empty file if the name does not exist.</td></tr><tr><td class="acr">rm / rm -r</td><td class="term-full">Remove / recursive</td><td>rm deletes files; -r is needed to delete a directory.</td></tr><tr><td class="acr">Timestamp</td><td class="term-full">Timestamp</td><td>Date and time a file was last modified; shown by ls -l.</td></tr><tr><td class="acr">Tab</td><td class="term-full">Tab completion</td><td>Shell feature that auto-completes file and command names.</td></tr></tbody></table></div>
+      </div>
+    </section>
+
+    <section class="section collapsible" id="comparison">
+      <div class="kicker" data-toggle="comparison">
+        <div class="kicker-left"><div class="num-badge" style="background:#5f6368">11</div><h2>Comparison Tables</h2></div>
+        <button type="button" class="collapse-toggle" id="comparison-toggle" aria-expanded="false" aria-controls="comparison-body" aria-label="Expand section"><span class="chevron">▾</span></button>
+      </div>
+      <div class="collapse-body" id="comparison-body">
+      <div class="subhead"><span class="sub-dot" style="background:var(--blue)"></span>ls options at a glance</div><div class="table-wrap"><table class="ctable"><thead><tr><th>Command</th><th>Shows hidden?</th><th>Long format?</th><th>Notes</th></tr></thead><tbody><tr><td class="row-head">ls</td><td>No</td><td>No</td><td>Names only, blue = directory</td></tr><tr><td class="row-head">ls -a</td><td>Yes</td><td>No</td><td>Same as <code>ls --all</code></td></tr><tr><td class="row-head">ls -l</td><td>No</td><td>Yes</td><td>Permissions, owner, size, date</td></tr><tr><td class="row-head">ls -al</td><td>Yes</td><td>Yes</td><td>Same as <code>-la</code> and <code>-a -l</code></td></tr></tbody></table></div><div class="subhead"><span class="sub-dot" style="background:var(--yellow)"></span>Absolute vs relative paths</div><div class="table-wrap"><table class="ctable"><thead><tr><th>Path starts with</th><th>Type</th><th>Example</th></tr></thead><tbody><tr><td class="row-head"><code>/</code></td><td>Absolute from root</td><td><code>cd /home/sysadmin/Documents</code></td></tr><tr><td class="row-head"><code>~</code></td><td>Absolute from home</td><td><code>cd ~/Documents/School/Math</code></td></tr><tr><td class="row-head">anything else</td><td>Relative to current directory</td><td><code>cd School/Art</code></td></tr></tbody></table></div><div class="subhead"><span class="sub-dot" style="background:var(--green)"></span>What Tab does</div><div class="table-wrap"><table class="ctable"><thead><tr><th>Situation</th><th>1st Tab</th><th>2nd Tab</th></tr></thead><tbody><tr><td class="row-head">One match</td><td>Completes the name</td><td>—</td></tr><tr><td class="row-head">Several matches, no shared prefix beyond what is typed</td><td>Nothing</td><td>Lists all matches</td></tr><tr><td class="row-head">Several matches with a longer shared prefix</td><td>Fills the shared part</td><td>Lists all matches</td></tr></tbody></table></div>
+      </div>
+    </section>
+
+    <section class="section collapsible" id="sinhala-vocab">
+      <div class="kicker" data-toggle="sinhala-vocab">
+        <div class="kicker-left"><div class="num-badge" style="background:linear-gradient(135deg,#34A853,#1a73e8)">12</div><h2>🇱🇰 Sinhala Vocabulary — පාඩමෙහි දුෂ්කර වචන</h2></div>
+        <button type="button" class="collapse-toggle" id="sinhala-vocab-toggle" aria-expanded="false" aria-controls="sinhala-vocab-body" aria-label="Expand section"><span class="chevron">▾</span></button>
+      </div>
+      <div class="collapse-body" id="sinhala-vocab-body">
+      <p class="lede" style="margin-bottom:22px;">This lesson’s difficult English words — with Sinhala meanings and example sentences from daily life, networking, software, hardware and cyber security.</p><div class="vocab-grid"><div class="vocab-card">
+          <div class="vocab-header"><span class="vocab-word">directory</span><span class="vocab-pos">noun</span></div>
+          <div class="vocab-body">
+            <div class="vocab-meanings">
+              <div class="vocab-en"><span class="vocab-lang-label">🇬🇧 English</span><p>A folder that holds files and other folders.</p></div>
+              <div class="vocab-si"><span class="vocab-lang-label">🇱🇰 සිංහල</span><p>ගොනු සහ වෙනත් ෆෝල්ඩර අඩංගු ෆෝල්ඩරයක් (නාමාවලිය)</p></div>
+            </div>
+            <div class="vocab-sentences-head">Sample Sentences</div>
+            <ul class="vocab-sentences"><li><span class="vocab-tag tag-daily">Daily</span><span>I keep every assignment inside one <span class="vocab-hl">directory</span> called Semester1.</span></li><li><span class="vocab-tag tag-net">Network</span><span>The server stores each user’s files in a separate <span class="vocab-hl">directory</span>.</span></li><li><span class="vocab-tag tag-sw">Software</span><span>Use <code>cd</code> to move from one <span class="vocab-hl">directory</span> to another.</span></li><li><span class="vocab-tag tag-hw">Hardware</span><span>The BIOS reads the boot <span class="vocab-hl">directory</span> on the disk first.</span></li><li><span class="vocab-tag tag-cyber">Cyber</span><span>An attacker listed the <span class="vocab-hl">directory</span> to find sensitive files.</span></li></ul>
+          </div>
+        </div>
+<div class="vocab-card">
+          <div class="vocab-header"><span class="vocab-word">hidden</span><span class="vocab-pos">adjective</span></div>
+          <div class="vocab-body">
+            <div class="vocab-meanings">
+              <div class="vocab-en"><span class="vocab-lang-label">🇬🇧 English</span><p>Not shown by default; kept out of sight.</p></div>
+              <div class="vocab-si"><span class="vocab-lang-label">🇱🇰 සිංහල</span><p>සාමාන්‍යයෙන් නොපෙන්වන, සැඟවුණු</p></div>
+            </div>
+            <div class="vocab-sentences-head">Sample Sentences</div>
+            <ul class="vocab-sentences"><li><span class="vocab-tag tag-daily">Daily</span><span>She found a <span class="vocab-hl">hidden</span> message in the old notebook.</span></li><li><span class="vocab-tag tag-net">Network</span><span>Dot-files are <span class="vocab-hl">hidden</span> unless you use <code>ls -a</code>.</span></li><li><span class="vocab-tag tag-sw">Software</span><span>The installer places a <span class="vocab-hl">hidden</span> settings file in your home folder.</span></li><li><span class="vocab-tag tag-hw">Hardware</span><span>Some partitions are <span class="vocab-hl">hidden</span> from the normal file manager.</span></li><li><span class="vocab-tag tag-cyber">Cyber</span><span>Malware often tries to stay <span class="vocab-hl">hidden</span> from the user.</span></li></ul>
+          </div>
+        </div>
+<div class="vocab-card">
+          <div class="vocab-header"><span class="vocab-word">option</span><span class="vocab-pos">noun</span></div>
+          <div class="vocab-body">
+            <div class="vocab-meanings">
+              <div class="vocab-en"><span class="vocab-lang-label">🇬🇧 English</span><p>An extra setting added to a command to change what it does.</p></div>
+              <div class="vocab-si"><span class="vocab-lang-label">🇱🇰 සිංහල</span><p>විධානයක ක්‍රියාව වෙනස් කිරීමට එක් කරන අමතර සැකසුමක්</p></div>
+            </div>
+            <div class="vocab-sentences-head">Sample Sentences</div>
+            <ul class="vocab-sentences"><li><span class="vocab-tag tag-daily">Daily</span><span>Pick the vegetarian <span class="vocab-hl">option</span> on the menu.</span></li><li><span class="vocab-tag tag-net">Network</span><span>In <code>ls -l</code>, the letter l is an <span class="vocab-hl">option</span>.</span></li><li><span class="vocab-tag tag-sw">Software</span><span>Each <span class="vocab-hl">option</span> changes the output format of the command.</span></li><li><span class="vocab-tag tag-hw">Hardware</span><span>The BIOS has an <span class="vocab-hl">option</span> to change the boot order.</span></li><li><span class="vocab-tag tag-cyber">Cyber</span><span>A scanner’s verbose <span class="vocab-hl">option</span> prints more detail.</span></li></ul>
+          </div>
+        </div>
+<div class="vocab-card">
+          <div class="vocab-header"><span class="vocab-word">prefix</span><span class="vocab-pos">noun</span></div>
+          <div class="vocab-body">
+            <div class="vocab-meanings">
+              <div class="vocab-en"><span class="vocab-lang-label">🇬🇧 English</span><p>The first part of a word or name.</p></div>
+              <div class="vocab-si"><span class="vocab-lang-label">🇱🇰 සිංහල</span><p>වචනයක හෝ නමක ආරම්භක කොටස</p></div>
+            </div>
+            <div class="vocab-sentences-head">Sample Sentences</div>
+            <ul class="vocab-sentences"><li><span class="vocab-tag tag-daily">Daily</span><span>“Un” is a common <span class="vocab-hl">prefix</span> in English.</span></li><li><span class="vocab-tag tag-net">Network</span><span>Tab completion matches the <span class="vocab-hl">prefix</span> you have typed.</span></li><li><span class="vocab-tag tag-sw">Software</span><span>If two names share a <span class="vocab-hl">prefix</span>, Tab fills only the shared part.</span></li><li><span class="vocab-tag tag-hw">Hardware</span><span>A network <span class="vocab-hl">prefix</span> such as 192.168.1 identifies the subnet.</span></li><li><span class="vocab-tag tag-cyber">Cyber</span><span>Attackers guess passwords using a known <span class="vocab-hl">prefix</span>.</span></li></ul>
+          </div>
+        </div>
+<div class="vocab-card">
+          <div class="vocab-header"><span class="vocab-word">ambiguous</span><span class="vocab-pos">adjective</span></div>
+          <div class="vocab-body">
+            <div class="vocab-meanings">
+              <div class="vocab-en"><span class="vocab-lang-label">🇬🇧 English</span><p>Having more than one possible meaning or match.</p></div>
+              <div class="vocab-si"><span class="vocab-lang-label">🇱🇰 සිංහල</span><p>අර්ථ හෝ ගැළපීම් එකකට වඩා ඇති, අපැහැදිලි</p></div>
+            </div>
+            <div class="vocab-sentences-head">Sample Sentences</div>
+            <ul class="vocab-sentences"><li><span class="vocab-tag tag-daily">Daily</span><span>Her answer was <span class="vocab-hl">ambiguous</span>, so nobody knew what she meant.</span></li><li><span class="vocab-tag tag-net">Network</span><span>Typing <code>cd D</code> is <span class="vocab-hl">ambiguous</span> when three folders start with D.</span></li><li><span class="vocab-tag tag-sw">Software</span><span>When a name is <span class="vocab-hl">ambiguous</span>, the shell cannot complete it.</span></li><li><span class="vocab-tag tag-hw">Hardware</span><span>An <span class="vocab-hl">ambiguous</span> hardware label caused the wrong cable to be used.</span></li><li><span class="vocab-tag tag-cyber">Cyber</span><span>An <span class="vocab-hl">ambiguous</span> firewall rule can leave a port open by mistake.</span></li></ul>
+          </div>
+        </div></div>
+      </div>
+    </section>
+
+    <section class="section collapsible" id="mcq-practice">
+      <div class="kicker" data-toggle="mcq-practice">
+        <div class="kicker-left"><div class="num-badge" style="background:var(--red)">13</div><h2>📝 MCQ Practice Test — 30 Questions</h2></div>
+        <button type="button" class="collapse-toggle" id="mcq-practice-toggle" aria-expanded="false" aria-controls="mcq-practice-body" aria-label="Expand section"><span class="chevron">▾</span></button>
+      </div>
+      <div class="collapse-body" id="mcq-practice-body">
+      <p class="lede">The module’s final assessment is a <b>Multiple Choice online class test</b> — so practice in that exact format. 30 exam-style MCQs covering every section of the lesson. Click an option to check it; only one attempt is scored per question.</p>
+      <div class="mcq-quiz-header">
+        <span id="mcqScore">Score: 0 / 30</span>
+        <button type="button" class="mcq-reset-btn" id="mcqReset">↺ Reset Quiz</button>
+      </div>
+      <div id="mcqContainer"></div>
+      </div>
+    </section>
+
+    <footer>Computer Architecture &amp; Operating Systems Design — Neroshana Gunasekara · COMP40050
+      <br><a class="back-top" href="#top">Back to top ↑</a>
+    </footer>
+  </main>
+</div>
+
+<div class="bottom-nav">
+  <a class="path-btn prev" href="07-emerging-technologies.html"><span class="p-arrow">←</span><span class="p-text"><span class="p-kicker">Previous</span><span class="p-title">07. Emerging Tech</span></span></a>
+  <a class="path-btn index" href="comp40050-index.html"><span class="p-text"><span class="p-kicker">All Topics</span><span class="p-title">🏠 Main Index</span></span></a>
+  <span class="path-spacer"></span>
+</div>
+
+<script>
+  window.__NAV_TOPICS__ = [{"num": "01", "title": "Number System Conversion", "href": "01-number-system-conversion.html"}, {"num": "02", "title": "Floating Point Data Representation", "href": "02-floating-point-representation.html"}, {"num": "03", "title": "CPU Architecture & Instruction Cycle", "href": "03-cpu-architecture-instruction-cycle.html"}, {"num": "04", "title": "Logic Gates & Memory Management", "href": "04-logic-gates-memory-management.html"}, {"num": "05", "title": "Storage Devices", "href": "05-storage-devices.html"}, {"num": "06", "title": "Display Technologies & GPU Architecture", "href": "07-emerging-technologies.html"}, {"num": "07", "title": "Emerging Technologies", "href": "07-emerging-technologies.html"}, {"num": "08", "title": "Navigating Directories & Tab Completion", "href": "08-navigating-directories-tab-completion.html"}];
+  window.__CURRENT_HREF__ = "08-navigating-directories-tab-completion.html";
+</script>
+<script>
+  // ===== TOC scroll-spy — highlights the active section link as you scroll =====
+  const sections = document.querySelectorAll('.section[id]');
+  const tocLinks = document.querySelectorAll('nav.toc a[href^="#"]');
+  const tocMap = {};
+  tocLinks.forEach(l => tocMap[l.getAttribute('href').slice(1)] = l);
+
+  const tocObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      const id = entry.target.getAttribute('id');
+      if(entry.isIntersecting){
+        tocLinks.forEach(l => l.classList.remove('active'));
+        if(tocMap[id]) tocMap[id].classList.add('active');
+      }
+    });
+  }, { rootMargin: '-15% 0px -70% 0px', threshold: 0 });
+
+  sections.forEach(s => tocObserver.observe(s));
+
+  // ===== Bottom-of-page fallback — last section is short so the observer never fires for it =====
+  window.addEventListener('scroll', () => {
+    const scrollBottom = window.scrollY + window.innerHeight;
+    const pageHeight = document.documentElement.scrollHeight;
+    if(scrollBottom >= pageHeight - 60){
+      const lastLink = tocLinks[tocLinks.length - 1];
+      if(lastLink && !lastLink.classList.contains('active')){
+        tocLinks.forEach(l => l.classList.remove('active'));
+        lastLink.classList.add('active');
+      }
+    }
+  }, { passive: true });
+</script>
+<script>
+(function(){
+  const toc = document.getElementById('toc');
+  const menuBtn = document.getElementById('menuBtn');
+  const drawerClose = document.getElementById('drawerClose');
+  const backdrop = document.getElementById('tocBackdrop');
+  if(!toc || !menuBtn) return;
+
+  function openDrawer(){
+    toc.classList.add('drawer-open');
+    if(backdrop) backdrop.classList.add('show');
+    menuBtn.setAttribute('aria-expanded','true');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeDrawer(){
+    toc.classList.remove('drawer-open');
+    if(backdrop) backdrop.classList.remove('show');
+    menuBtn.setAttribute('aria-expanded','false');
+    document.body.style.overflow = '';
+  }
+
+  menuBtn.addEventListener('click', () => {
+    toc.classList.contains('drawer-open') ? closeDrawer() : openDrawer();
+  });
+  if(drawerClose) drawerClose.addEventListener('click', closeDrawer);
+  if(backdrop) backdrop.addEventListener('click', closeDrawer);
+  toc.querySelectorAll('a').forEach(l => l.addEventListener('click', closeDrawer));
+  window.addEventListener('keydown', (e) => { if(e.key === 'Escape') closeDrawer(); });
+  window.addEventListener('resize', () => { if(window.innerWidth > 900) closeDrawer(); });
+})();
+
+// ===== In-page "find" search (shared engine — drives both the sidebar/mobile-menu box and the hero box) =====
+(function(){
+  const mainEl = document.querySelector('main');
+  if(!mainEl) return;
+  let matches = [];
+  let activeIndex = -1;
+  const uiSets = [];
+
+  function clearHighlights(){
+    mainEl.querySelectorAll('mark.search-hit').forEach(mark => {
+      const parent = mark.parentNode;
+      parent.replaceChild(document.createTextNode(mark.textContent), mark);
+      parent.normalize();
+    });
+    matches = [];
+    activeIndex = -1;
+  }
+
+  function walkAndHighlight(query){
+    const lowerQuery = query.toLowerCase();
+    const walker = document.createTreeWalker(mainEl, NodeFilter.SHOW_TEXT, {
+      acceptNode(node){
+        if(!node.nodeValue || !node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+        const tag = node.parentElement ? node.parentElement.tagName : '';
+        if(tag === 'SCRIPT' || tag === 'STYLE') return NodeFilter.FILTER_REJECT;
+        if(node.parentElement && node.parentElement.closest('.tm-wrap')) return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+
+    const textNodes = [];
+    let n;
+    while((n = walker.nextNode())) textNodes.push(n);
+
+    textNodes.forEach(node => {
+      const text = node.nodeValue;
+      const lowerText = text.toLowerCase();
+      if(!lowerText.includes(lowerQuery)) return;
+
+      const frag = document.createDocumentFragment();
+      let lastIndex = 0;
+      let idx = lowerText.indexOf(lowerQuery);
+
+      while(idx !== -1){
+        if(idx > lastIndex){
+          frag.appendChild(document.createTextNode(text.slice(lastIndex, idx)));
+        }
+        const mark = document.createElement('mark');
+        mark.className = 'search-hit';
+        mark.textContent = text.slice(idx, idx + query.length);
+        frag.appendChild(mark);
+        matches.push(mark);
+        lastIndex = idx + query.length;
+        idx = lowerText.indexOf(lowerQuery, lastIndex);
+      }
+      if(lastIndex < text.length){
+        frag.appendChild(document.createTextNode(text.slice(lastIndex)));
+      }
+      node.parentNode.replaceChild(frag, node);
+    });
+  }
+
+  function updateAllUI(){
+    uiSets.forEach(ui => {
+      if(matches.length === 0){
+        ui.navBar.classList.remove('show');
+        ui.prevBtn.disabled = true;
+        ui.nextBtn.disabled = true;
+        ui.countLabel.textContent = '0 / 0';
+      } else {
+        ui.navBar.classList.add('show');
+        ui.prevBtn.disabled = false;
+        ui.nextBtn.disabled = false;
+        ui.countLabel.textContent = `${activeIndex + 1} / ${matches.length}`;
+      }
+    });
+  }
+
+  function syncValue(value){
+    uiSets.forEach(ui => {
+      if(ui.input.value !== value) ui.input.value = value;
+      ui.wrap.classList.toggle('has-query', value.trim().length > 0);
+    });
+  }
+
+  function goToMatch(index){
+    if(matches.length === 0) return;
+    if(activeIndex >= 0 && matches[activeIndex]) matches[activeIndex].classList.remove('active');
+    activeIndex = ((index % matches.length) + matches.length) % matches.length;
+    const mark = matches[activeIndex];
+    mark.classList.add('active');
+    mark.scrollIntoView({ behavior:'smooth', block:'center' });
+    updateAllUI();
+  }
+
+  function runSearch(rawQuery){
+    clearHighlights();
+    const query = rawQuery.trim();
+    syncValue(rawQuery);
+
+    if(query.length < 2){
+      updateAllUI();
+      return;
+    }
+
+    walkAndHighlight(query);
+
+    if(matches.length === 0){
+      updateAllUI();
+      return;
+    }
+
+    goToMatch(0);
+  }
+
+  function resetAll(){
+    syncValue('');
+    clearHighlights();
+    updateAllUI();
+  }
+
+  function bindUI(ui){
+    if(!ui.input || !ui.clearBtn || !ui.wrap || !ui.navBar || !ui.countLabel || !ui.prevBtn || !ui.nextBtn) return;
+    uiSets.push(ui);
+    let debounceTimer = null;
+
+    ui.input.addEventListener('input', () => {
+      clearTimeout(debounceTimer);
+      const val = ui.input.value;
+      debounceTimer = setTimeout(() => runSearch(val), 200);
+    });
+
+    ui.input.addEventListener('keydown', (e) => {
+      if(e.key === 'Enter'){
+        e.preventDefault();
+        if(matches.length > 0) goToMatch(activeIndex + (e.shiftKey ? -1 : 1));
+      }
+      if(e.key === 'Escape'){
+        resetAll();
+        ui.input.blur();
+      }
+    });
+
+    ui.prevBtn.addEventListener('click', () => goToMatch(activeIndex - 1));
+    ui.nextBtn.addEventListener('click', () => goToMatch(activeIndex + 1));
+    ui.clearBtn.addEventListener('click', () => {
+      resetAll();
+      ui.input.focus();
+    });
+  }
+
+  bindUI({
+    input: document.getElementById('pageSearchInput'),
+    clearBtn: document.getElementById('pageSearchClear'),
+    wrap: document.getElementById('pageSearchInput') ? document.getElementById('pageSearchInput').closest('.toc-search') : null,
+    navBar: document.getElementById('searchNav'),
+    countLabel: document.getElementById('searchCount'),
+    prevBtn: document.getElementById('searchPrev'),
+    nextBtn: document.getElementById('searchNext'),
+  });
+
+  bindUI({
+    input: document.getElementById('heroFindInput'),
+    clearBtn: document.getElementById('heroFindClear'),
+    wrap: document.getElementById('heroFindWrap'),
+    navBar: document.getElementById('heroFindNav'),
+    countLabel: document.getElementById('heroSearchCount'),
+    prevBtn: document.getElementById('heroSearchPrev'),
+    nextBtn: document.getElementById('heroSearchNext'),
+  });
+
+  window.addEventListener('keydown', (e) => {
+    const focusedIsSearch = uiSets.some(ui => document.activeElement === ui.input);
+    const heroFindInput = document.getElementById('heroFindInput');
+    if(e.key === '/' && !focusedIsSearch && !e.metaKey && !e.ctrlKey && heroFindInput){
+      e.preventDefault();
+      heroFindInput.focus();
+    }
+  });
+})();
+
+// ===== Global topic search (jump to any other topic page from this page's hero) =====
+(function(){
+  const TOPICS = window.__NAV_TOPICS__ || [];
+  const CURRENT_HREF = window.__CURRENT_HREF__ || '';
+
+  const jumpInput = document.getElementById('topicJump');
+  const jumpWrap = document.getElementById('siteSearch');
+  const jumpClear = document.getElementById('jumpClear');
+  const dropdown = document.getElementById('jumpDropdown');
+  if(!jumpInput || !jumpWrap || !jumpClear || !dropdown) return;
+
+  let results = [];
+  let hlIndex = -1;
+
+  function render(query){
+    const q = query.trim().toLowerCase();
+    if(q === ''){
+      dropdown.classList.remove('show');
+      dropdown.innerHTML = '';
+      results = [];
+      hlIndex = -1;
+      return;
+    }
+
+    results = TOPICS.filter(t => t.title.toLowerCase().includes(q)).slice(0, 8);
+    hlIndex = -1;
+
+    if(results.length === 0){
+      dropdown.innerHTML = '<div class="s-empty">No topics match your search</div>';
+    } else {
+      dropdown.innerHTML = results.map((t, i) => {
+        const current = t.href === CURRENT_HREF ? ' (this page)' : '';
+        return `<a class="s-item" href="${t.href}" data-idx="${i}"><span class="s-num">${t.num}</span><span>${t.title}${current}</span></a>`;
+      }).join('');
+    }
+    dropdown.classList.add('show');
+  }
+
+  function setHighlight(i){
+    const items = dropdown.querySelectorAll('.s-item');
+    items.forEach(el => el.classList.remove('hl'));
+    if(i >= 0 && items[i]){
+      items[i].classList.add('hl');
+      items[i].scrollIntoView({ block:'nearest' });
+    }
+    hlIndex = i;
+  }
+
+  jumpInput.addEventListener('input', () => {
+    jumpWrap.classList.toggle('has-query', jumpInput.value.trim().length > 0);
+    render(jumpInput.value);
+  });
+
+  jumpInput.addEventListener('keydown', (e) => {
+    if(e.key === 'ArrowDown'){
+      e.preventDefault();
+      if(results.length) setHighlight((hlIndex + 1) % results.length);
+    } else if(e.key === 'ArrowUp'){
+      e.preventDefault();
+      if(results.length) setHighlight((hlIndex - 1 + results.length) % results.length);
+    } else if(e.key === 'Enter'){
+      if(hlIndex >= 0 && results[hlIndex]){
+        window.location.href = results[hlIndex].href;
+      } else if(results.length > 0){
+        window.location.href = results[0].href;
+      }
+    } else if(e.key === 'Escape'){
+      jumpInput.value = '';
+      jumpWrap.classList.remove('has-query');
+      render('');
+      jumpInput.blur();
+    }
+  });
+
+  jumpClear.addEventListener('click', () => {
+    jumpInput.value = '';
+    jumpWrap.classList.remove('has-query');
+    render('');
+    jumpInput.focus();
+  });
+
+  document.addEventListener('click', (e) => {
+    if(!jumpWrap.contains(e.target)){
+      dropdown.classList.remove('show');
+    }
+  });
+})();
+
+// ===== Collapse / expand accordion (exam, glossary, comparison, vocab) =====
+(function(){
+  const GROUP_IDS = ['commands', 'exam', 'glossary', 'comparison', 'sinhala-vocab', 'mcq-practice'];
+  const items = GROUP_IDS.map(id => ({
+    id,
+    section: document.getElementById(id),
+    body: document.getElementById(`${id}-body`),
+    toggle: document.getElementById(`${id}-toggle`),
+  })).filter(item => item.section && item.body && item.toggle);
+
+  function openItem(item, animate){
+    item.body.classList.add('open');
+    item.toggle.setAttribute('aria-expanded', 'true');
+    if(animate === false){
+      item.body.style.maxHeight = 'none';
+      return;
+    }
+    item.body.style.maxHeight = item.body.scrollHeight + 'px';
+    const onEnd = (e) => {
+      if(e.propertyName !== 'max-height') return;
+      item.body.style.maxHeight = 'none';
+      item.body.removeEventListener('transitionend', onEnd);
+    };
+    item.body.addEventListener('transitionend', onEnd);
+  }
+
+  function closeItem(item){
+    if(!item.body.classList.contains('open')) return;
+    const current = item.body.scrollHeight;
+    item.body.style.maxHeight = current + 'px';
+    item.body.offsetHeight;
+    requestAnimationFrame(() => {
+      item.body.style.maxHeight = '0px';
+    });
+    item.body.classList.remove('open');
+    item.toggle.setAttribute('aria-expanded', 'false');
+  }
+
+  function toggleItem(id){
+    const clicked = items.find(i => i.id === id);
+    if(!clicked) return;
+    const isOpen = clicked.body.classList.contains('open');
+    items.forEach(i => { if(i !== clicked) closeItem(i); });
+    if(isOpen){
+      closeItem(clicked);
+    } else {
+      openItem(clicked, true);
+    }
+  }
+
+  items.forEach(item => {
+    item.toggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleItem(item.id);
+    });
+    item.section.querySelector('.kicker').addEventListener('click', () => toggleItem(item.id));
+  });
+
+  window.__openAccordionSection = function(id){
+    const item = items.find(i => i.id === id);
+    if(!item) return;
+    if(!item.body.classList.contains('open')){
+      items.forEach(i => { if(i !== item) closeItem(i); });
+      openItem(item, true);
+    }
+  };
+
+  if(location.hash){
+    const targetId = location.hash.slice(1);
+    if(GROUP_IDS.includes(targetId)){
+      window.__openAccordionSection(targetId);
+      requestAnimationFrame(() => {
+        document.getElementById(targetId).scrollIntoView({ block:'start' });
+      });
+    }
+  }
+
+  document.querySelectorAll('nav.toc a[href^="#"]').forEach(link => {
+    const id = link.getAttribute('href').slice(1);
+    if(!GROUP_IDS.includes(id)) return;
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      window.__openAccordionSection(id);
+      history.pushState(null, '', '#' + id);
+      requestAnimationFrame(() => {
+        document.getElementById(id).scrollIntoView({ behavior:'smooth', block:'start' });
+      });
+    });
+  });
+})();
+</script>
+
+<script>
+(function(){
+  const QUIZ_DATA = [
+  {
+    "q": "Which command lists the visible contents of the current directory?",
+    "options": [
+      "ls",
+      "pwd",
+      "cd",
+      "man"
+    ],
+    "correct": 0,
+    "note": "<b>ls</b> lists directory contents."
+  },
+  {
+    "q": "In the default terminal, directories in an ls listing are shown in which colour?",
+    "options": [
+      "Blue",
+      "Red",
+      "Yellow",
+      "Orange"
+    ],
+    "correct": 0,
+    "note": "Blue = directories; white = files."
+  },
+  {
+    "q": "Which command prints the full path of your current directory?",
+    "options": [
+      "pwd",
+      "ls -l",
+      "cd",
+      "clear"
+    ],
+    "correct": 0,
+    "note": "pwd = print working directory."
+  },
+  {
+    "q": "Typing cd with no argument takes you to:",
+    "options": [
+      "The root directory /",
+      "Your home directory",
+      "The previous directory",
+      "Desktop"
+    ],
+    "correct": 1,
+    "note": "cd alone returns to the home directory."
+  },
+  {
+    "q": "Which of these is a hidden file?",
+    "options": [
+      "bashrc",
+      ".bashrc",
+      "Bashrc.",
+      "_bashrc"
+    ],
+    "correct": 1,
+    "note": "A leading dot makes a name hidden."
+  },
+  {
+    "q": "Which command shows hidden files too?",
+    "options": [
+      "ls -h",
+      "ls -a",
+      "ls -s",
+      "ls -x"
+    ],
+    "correct": 1,
+    "note": "-a means all entries."
+  },
+  {
+    "q": "What does <code>ls --all</code> do?",
+    "options": [
+      "Same as ls -a",
+      "Same as ls -l",
+      "Deletes hidden files",
+      "Causes an error"
+    ],
+    "correct": 0,
+    "note": "--all is the long form of -a."
+  },
+  {
+    "q": "Why should you avoid editing hidden config files casually?",
+    "options": [
+      "They hold settings; a wrong edit can break things",
+      "They are always read-only",
+      "They are very large",
+      "They are not real files"
+    ],
+    "correct": 0,
+    "note": "Dot-files typically store configuration."
+  },
+  {
+    "q": "Which command gives a long listing of everything, including hidden entries?",
+    "options": [
+      "ls -al",
+      "ls --al",
+      "ls al",
+      "ls -all-"
+    ],
+    "correct": 0,
+    "note": "-a (all) plus -l (long)."
+  },
+  {
+    "q": "Which two commands are equivalent?",
+    "options": [
+      "ls -al and ls -la",
+      "ls -a and ls -l",
+      "ls --all and ls -l",
+      "ls -l and ls -L"
+    ],
+    "correct": 0,
+    "note": "The order of combined short letters does not matter."
+  },
+  {
+    "q": "How many hyphens does a long-form option use?",
+    "options": [
+      "One",
+      "Two",
+      "Three",
+      "None"
+    ],
+    "correct": 1,
+    "note": "Long options: two hyphens (--all). Short: one (-a)."
+  },
+  {
+    "q": "Where can you read all the options of ls?",
+    "options": [
+      "man ls",
+      "ls --list",
+      "pwd",
+      "cd --help-all"
+    ],
+    "correct": 0,
+    "note": "man ls opens the manual page."
+  },
+  {
+    "q": "Which command lists the contents of /var/log in size order?",
+    "options": [
+      "ls -lS /var/log",
+      "ls -ls /var/log",
+      "ls -lt /var/log",
+      "ls -lr /var/log"
+    ],
+    "correct": 0,
+    "note": "Uppercase <b>S</b> sorts by size."
+  },
+  {
+    "q": "What is the difference between <code>ls -r</code> and <code>ls -R</code>?",
+    "options": [
+      "-r reverses the order; -R is recursive",
+      "They are identical",
+      "-r is recursive; -R is reverse",
+      "Both only show hidden files"
+    ],
+    "correct": 0,
+    "note": "Lowercase r = reverse; uppercase R = recursive."
+  },
+  {
+    "q": "How do you list several directories with one ls command?",
+    "options": [
+      "Separate the names with spaces, e.g. ls /usr ~ Documents",
+      "Separate them with commas",
+      "Run ls once with -m",
+      "It is not possible"
+    ],
+    "correct": 0,
+    "note": "Directory names are separated by spaces."
+  },
+  {
+    "q": "A path that starts with <code>/</code> is:",
+    "options": [
+      "Absolute, from root",
+      "Relative",
+      "Absolute, from home",
+      "Invalid"
+    ],
+    "correct": 0,
+    "note": "/ is the root directory, so the path is absolute."
+  },
+  {
+    "q": "Which command moves you up two levels from the current directory?",
+    "options": [
+      "cd ../..",
+      "cd ..",
+      "cd ~~",
+      "cd //"
+    ],
+    "correct": 0,
+    "note": "Each .. is one level up."
+  },
+  {
+    "q": "You run <code>cd Documents</code> and nothing is printed. What does that mean?",
+    "options": [
+      "The move succeeded — check the prompt",
+      "The command failed",
+      "The folder is empty",
+      "Permission was denied"
+    ],
+    "correct": 0,
+    "note": "No output means success; the prompt shows the new directory."
+  },
+  {
+    "q": "Which command takes you to <code>Math</code> using an absolute path from home?",
+    "options": [
+      "cd ~/Documents/School/Math",
+      "cd School/Math",
+      "cd ../Math",
+      "cd /Math"
+    ],
+    "correct": 0,
+    "note": "~ starts the path at your home directory."
+  },
+  {
+    "q": "Is <code>ls -l</code> the same as <code>ls -L</code>?",
+    "options": [
+      "Yes",
+      "No — Linux is case-sensitive",
+      "Only as root",
+      "Only in the GUI"
+    ],
+    "correct": 1,
+    "note": "Upper and lower case options differ."
+  },
+  {
+    "q": "A folder is named Downloads. Which command works?",
+    "options": [
+      "cd downloads",
+      "cd Downloads",
+      "cd DOWNLOADS",
+      "cd dOwnloads"
+    ],
+    "correct": 1,
+    "note": "Names are case-sensitive."
+  },
+  {
+    "q": "How do you leave a man page?",
+    "options": [
+      "Press q",
+      "Press Ctrl+S",
+      "Type exit",
+      "Press Delete"
+    ],
+    "correct": 0,
+    "note": "q quits the manual viewer."
+  },
+  {
+    "q": "What does <code>man ls</code> display?",
+    "options": [
+      "The manual page for ls",
+      "The list of users",
+      "Hidden files",
+      "Command history"
+    ],
+    "correct": 0,
+    "note": "man = manual."
+  },
+  {
+    "q": "Only Desktop starts with “De”. What does <code>cd De</code> + Tab do?",
+    "options": [
+      "Completes to Desktop/",
+      "Nothing",
+      "Lists all folders",
+      "Shows an error"
+    ],
+    "correct": 0,
+    "note": "A single match is completed."
+  },
+  {
+    "q": "Desktop, Documents and Downloads exist. You type <code>cd D</code> and press Tab once. What happens?",
+    "options": [
+      "Nothing visible",
+      "Completes to Desktop",
+      "Deletes the D",
+      "Shows an error"
+    ],
+    "correct": 0,
+    "note": "Ambiguous: one Tab does nothing."
+  },
+  {
+    "q": "You press Tab a second time after <code>cd D</code>. What appears?",
+    "options": [
+      "The list of matching names",
+      "The folder is opened",
+      "The terminal clears",
+      "An error"
+    ],
+    "correct": 0,
+    "note": "Double Tab lists candidates."
+  },
+  {
+    "q": "Download and Downloads exist. <code>cd Dow</code> + Tab results in:",
+    "options": [
+      "Fills Download, then stops",
+      "Opens Downloads",
+      "An error",
+      "Nothing at all"
+    ],
+    "correct": 0,
+    "note": "Tab fills the shared prefix only."
+  },
+  {
+    "q": "What does <code>touch Download</code> do when the Download directory already exists?",
+    "options": [
+      "Updates its timestamp",
+      "Deletes it",
+      "Creates a second copy",
+      "Shows an error"
+    ],
+    "correct": 0,
+    "note": "touch on an existing name only refreshes the timestamp."
+  },
+  {
+    "q": "You type <code>touch download</code> (lowercase d) and no error appears. Why?",
+    "options": [
+      "It created a new empty file called download",
+      "It updated the Download directory",
+      "The command was ignored",
+      "The shell auto-corrected it"
+    ],
+    "correct": 0,
+    "note": "touch creates a missing file silently — Tab completion prevents this."
+  },
+  {
+    "q": "Which command removes a directory called Download?",
+    "options": [
+      "rm -r Download",
+      "rm Download",
+      "touch -d Download",
+      "ls -r Download"
+    ],
+    "correct": 0,
+    "note": "A directory needs the -r (recursive) option; plain rm reports Is a directory."
+  }
+];
+
+  const container = document.getElementById('mcqContainer');
+  const scoreEl = document.getElementById('mcqScore');
+  const resetBtn = document.getElementById('mcqReset');
+  if(!container || !scoreEl) return;
+
+  const LETTERS = ['A','B','C','D','E','F'];
+  let score = 0;
+  const answered = new Set();
+
+  function updateScore(){
+    scoreEl.textContent = `Score: ${score} / ${QUIZ_DATA.length}`;
+  }
+
+  function render(){
+    container.innerHTML = '';
+    QUIZ_DATA.forEach((item, qIndex) => {
+      const card = document.createElement('div');
+      card.className = 'mcq-card';
+
+      const qEl = document.createElement('p');
+      qEl.className = 'mcq-q';
+      qEl.innerHTML = `<span class="mcq-num">${qIndex + 1}.</span>${item.q}`;
+      card.appendChild(qEl);
+
+      const optsWrap = document.createElement('div');
+      optsWrap.className = 'mcq-options';
+
+      const noteEl = document.createElement('div');
+      noteEl.className = 'mcq-note';
+      if(item.note) noteEl.innerHTML = `<b>Why:</b> ${item.note}`;
+
+      item.options.forEach((optText, optIndex) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'mcq-opt';
+        btn.innerHTML = `<span class="mcq-letter">${LETTERS[optIndex]}</span><span>${optText}</span>`;
+        btn.addEventListener('click', () => {
+          if(answered.has(qIndex)) return;
+          answered.add(qIndex);
+          const isCorrect = optIndex === item.correct;
+          btn.classList.add(isCorrect ? 'correct' : 'wrong');
+          if(isCorrect) score++;
+          optsWrap.querySelectorAll('.mcq-opt').forEach((b, i) => {
+            b.classList.add('locked');
+            if(i === item.correct) b.classList.add('correct');
+          });
+          if(item.note) noteEl.classList.add('show');
+          updateScore();
+        });
+        optsWrap.appendChild(btn);
+      });
+
+      card.appendChild(optsWrap);
+      if(item.note) card.appendChild(noteEl);
+      container.appendChild(card);
+    });
+  }
+
+  if(resetBtn){
+    resetBtn.addEventListener('click', () => {
+      score = 0;
+      answered.clear();
+      updateScore();
+      render();
+    });
+  }
+
+  render();
+  updateScore();
+})();
+</script>
+
+<script>
+  document.querySelectorAll('.si-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const panel = document.getElementById(btn.getAttribute('data-target'));
+      if(!panel) return;
+      const isOpen = panel.classList.toggle('open');
+      btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    });
+  });
+</script>
+<script>
+(function(){
+  const imgs = Array.from(document.querySelectorAll('.figure img'));
+  const overlay = document.createElement('div');
+  overlay.className = 'lb-overlay';
+  overlay.setAttribute('role','dialog'); overlay.setAttribute('aria-modal','true'); overlay.setAttribute('aria-label','Enlarged image');
+  overlay.innerHTML = '<button type="button" class="lb-close" aria-label="Close image">&times;</button>' +
+    '<button type="button" class="lb-nav lb-prev" aria-label="Previous image">&#8249;</button>' +
+    '<button type="button" class="lb-nav lb-next" aria-label="Next image">&#8250;</button>' +
+    '<img alt=""><div class="lb-caption"></div><div class="lb-count"></div>';
+  document.body.appendChild(overlay);
+  const bigImg = overlay.querySelector('img');
+  const cap = overlay.querySelector('.lb-caption');
+  const count = overlay.querySelector('.lb-count');
+  let idx = 0;
+  function show(i){
+    idx = (i + imgs.length) % imgs.length;
+    const img = imgs[idx];
+    bigImg.src = img.currentSrc || img.src;
+    bigImg.alt = img.alt || '';
+    const fc = img.closest('.figure') && img.closest('.figure').querySelector('figcaption');
+    cap.textContent = fc ? fc.textContent : (img.alt || '');
+    count.textContent = (idx + 1) + ' / ' + imgs.length;
+  }
+  function open(i){
+    show(i);
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function close(){
+    overlay.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  const isOpen = () => overlay.classList.contains('open');
+  imgs.forEach((img, i) => img.addEventListener('click', () => open(i)));
+  overlay.addEventListener('click', close);
+  overlay.querySelector('.lb-prev').addEventListener('click', e => { e.stopPropagation(); show(idx - 1); });
+  overlay.querySelector('.lb-next').addEventListener('click', e => { e.stopPropagation(); show(idx + 1); });
+  overlay.querySelector('.lb-close').addEventListener('click', e => { e.stopPropagation(); close(); });
+  window.addEventListener('keydown', e => {
+    if(!isOpen()) return;
+    if(e.key === 'Escape') close();
+    else if(e.key === 'ArrowLeft') show(idx - 1);
+    else if(e.key === 'ArrowRight') show(idx + 1);
+  });
+  // Swipe left / right on touch screens
+  let sx = null, sy = null;
+  overlay.addEventListener('touchstart', e => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, { passive: true });
+  overlay.addEventListener('touchend', e => {
+    if(sx === null) return;
+    const dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy;
+    sx = sy = null;
+    if(Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5){
+      e.preventDefault();
+      show(dx < 0 ? idx + 1 : idx - 1);
+      overlay._swiped = true; setTimeout(() => overlay._swiped = false, 400);
+    }
+  });
+  // ignore the synthetic click that follows a swipe so it doesn't close the viewer
+  overlay.addEventListener('click', e => { if(overlay._swiped){ e.stopImmediatePropagation(); } }, true);
+})();
+</script>
+<script>
+(function(){
+const HOME='/home/user';
+const f=(s,m,u)=>({t:'f',s,m,u,c:null}), d=(m,u,c={})=>({t:'d',s:4096,m,u,c});
+function build(){return d('Oct  6 09:00',1,{
+ home:d('Oct  6 09:00',1,{user:d('Oct  6 09:12',9,{
+  'Desktop':d('Oct  1 10:20',5),
+  'Documents':d('Sep 28 14:05',4,{'School':d('Sep 28 14:05',4,{'Art':d('Sep 20 10:00',2),'Math':d('Sep 20 10:00',2)}),'alpha.txt':f(412,'Sep 27 11:15',3),'people.csv':f(1290,'Sep 26 16:40',3),'profile.txt':f(88,'Sep 25 09:02',3)}),
+  'Downloads':d('Oct  2 18:44',6),
+  '.cache':d('Oct  1 09:10',2),'.config':d('Oct  1 09:10',2),
+  '.bash_history':f(1873,'Oct  5 21:30',8),'.bash_logout':f(220,'Sep 20 08:00',1),'.bashrc':f(3771,'Sep 20 08:00',1),
+  '.lesshst':f(20,'Oct  3 11:02',7),'.profile':f(807,'Sep 20 08:00',1),'.sudo_as_admin_successful':f(0,'Sep 20 08:05',1)})}),
+ etc:d('Oct  5 08:00',3,{'hostname':f(7,'Sep 20 08:00',1),'hosts':f(221,'Sep 20 08:00',1),'passwd':f(1830,'Oct  5 08:00',3)}),
+ usr:d('Sep 20 08:00',1,{'bin':d('Sep 20 08:00',1),'lib':d('Sep 20 08:00',1),'share':d('Sep 20 08:00',1)}),
+ var:d('Sep 20 08:00',1,{'log':d('Oct  6 07:00',2,{'auth.log':f(703,'Sep  6 21:17',2),'dmesg':f(85083,'Dec 20  2017',1),'syslog':f(13850,'Sep  6 21:17',2)})})})}
+let tick=100;const NOW='Oct  8 10:00';
+let root,cwd,hist,hi,state,lastTab;
+const out=document.getElementById('tmOut'),cmd=document.getElementById('tmCmd'),ps=document.getElementById('tmPs'),scr=document.getElementById('tmScreen');
+if(!out||!cmd)return;
+const esc=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const parts=p=>p.split('/').filter(Boolean);
+function node(p){let n=root;for(const x of parts(p)){if(!n||n.t!=='d')return null;n=n.c[x]}return n||null}
+function abs(p){let b,q=p;if(q===''||q==='~')return HOME;if(q.startsWith('~/')){b=parts(HOME);q=q.slice(2)}else b=q.startsWith('/')?[]:parts(cwd);
+ for(const s of q.split('/')){if(!s||s==='.')continue;if(s==='..')b.pop();else b.push(s)}return '/'+b.join('/')}
+function prompt(){const sh=cwd===HOME?'~':cwd.startsWith(HOME+'/')?'~'+cwd.slice(HOME.length):cwd;return `<span class="tm-pr">user@ubuntu</span>:<span class="tm-pp">${esc(sh)}</span>$ `}
+function print(h){out.insertAdjacentHTML('beforeend',h+'\n');scr.scrollTop=scr.scrollHeight}
+function nm(n,k){return n.t==='d'?`<span class="tm-d">${esc(k)}</span>`:esc(k)}
+const sortK=a=>a.replace(/^\./,'').toLowerCase();
+const fmt=(n,h)=>{if(!h||n<1024)return String(n);const k=n/1024;return (k<10?k.toFixed(1):Math.round(k))+'K'};
+function dirOut(n,o,disp){
+ let ks=Object.keys(n.c).filter(k=>o.a||!k.startsWith('.'));
+ ks.sort((x,y)=>o.S?(n.c[y].s-n.c[x].s)||sortK(x).localeCompare(sortK(y)):o.t?(n.c[y].u-n.c[x].u)||sortK(x).localeCompare(sortK(y)):sortK(x).localeCompare(sortK(y)));
+ if(o.r)ks.reverse();
+ let ents=ks.map(k=>[k,n.c[k]]);if(o.a&&!o.S&&!o.t&&!o.r)ents.unshift(['.',n],['..',n]);
+ let body;
+ if(!o.l)body=ents.map(([k,v])=>nm(v,k)).join('  ');
+ else{const w=Math.max(1,...ents.map(([k,v])=>fmt(v.s,o.h).length));
+  body='total '+Math.max(8,ents.length*4)+'\n'+ents.map(([k,v])=>`${v.t==='d'?'drwxr-xr-x':'-rw-r--r--'} ${v.t==='d'?2:1} user user ${fmt(v.s,o.h).padStart(w)} ${v.m} ${nm(v,k)}`).join('\n')}
+ if(o.R)for(const [k,v] of ents)if(v.t==='d'&&k!=='.'&&k!=='..')body+='\n\n'+esc(disp)+'/'+esc(k)+':\n'+dirOut(v,o,disp+'/'+k);
+ return body}
+function ls(args){const o={};let tgt=[];
+ for(const a of args){if(a==='--all')o.a=true;else if(a.startsWith('--'))return `ls: unrecognized option '${esc(a)}'`;
+  else if(a.startsWith('-')&&a.length>1){for(const c of a.slice(1)){if('altrShSR'.includes(c)&&c!=='s'){o[c]=true}else return `ls: invalid option -- '${esc(c)}'`}}else tgt.push(a)}
+ if(!tgt.length)tgt=['.'];state.ls.push({all:o.a,long:o.l,h:o.h,r:o.r,S:o.S,t:o.t,R:o.R});
+ const outp=[];
+ for(const t of tgt){const n=node(abs(t));if(!n){outp.push(`ls: cannot access '${esc(t)}': No such file or directory`);continue}
+  if(n.t==='f'){outp.push(esc(t));continue}
+  const head=(tgt.length>1||o.R)?esc(t==='.'?'.':t)+':\n':'';outp.push(head+dirOut(n,o,t))}
+ return outp.join('\n\n')}
+const MAN=`LS(1)                User Commands                LS(1)
+
+NAME
+       ls - list directory contents
+
+SYNOPSIS
+       ls [OPTION]... [FILE]...
+
+OPTIONS
+       -a, --all
+              do not ignore entries starting with .
+       -l     use a long listing format
+       -L, --dereference
+              (a different option from -l — case matters!)
+
+(simulated excerpt — press q to quit in a real terminal)`;
+function run(line){print(prompt()+esc(line));const t=line.trim().split(/\s+/).filter(Boolean);if(!t.length)return;
+ const [c,...a]=t;state.cmds.push(line.trim());let r='';
+ if(c==='pwd')r=esc(cwd);
+ else if(c==='ls')r=ls(a);
+ else if(c==='cd'){const p=abs(a[0]||'~'),n=node(p);if(!n){r=`bash: cd: ${esc(a[0])}: No such file or directory`;const cn=node(cwd);if(a[0]&&cn&&Object.keys(cn.c).some(k=>k.toLowerCase()===a[0].toLowerCase()))state.cdErr=true}else if(n.t!=='d')r=`bash: cd: ${esc(a[0])}: Not a directory`;else{cwd=p;state.cds.push(p)}}
+ else if(c==='mkdir'){if(!a.length)r="mkdir: missing operand";else for(const x of a){const p=abs(x),b=p.slice(0,p.lastIndexOf('/'))||'/',k=p.slice(p.lastIndexOf('/')+1),par=node(b);
+   if(!par||par.t!=='d')r+=`mkdir: cannot create directory '${esc(x)}': No such file or directory\n`;else if(par.c[k])r+=`mkdir: cannot create directory '${esc(x)}': File exists\n`;else par.c[k]=d(NOW,++tick)}r=r.trim()}
+ else if(c==='touch'){if(!a.length)r="touch: missing file operand";else for(const x of a){const p=abs(x),b=p.slice(0,p.lastIndexOf('/'))||'/',k=p.slice(p.lastIndexOf('/')+1),par=node(b),n=node(p);
+   if(n){n.m=NOW;n.u=++tick;state.touchEx=true}else if(par&&par.t==='d'){par.c[k]=f(0,NOW,++tick);state.touchNew=true}else r+=`touch: cannot touch '${esc(x)}': No such file or directory\n`}r=r.trim()}
+ else if(c==='rm'){const rec=a.some(x=>/^-[a-zA-Z]*[rR]/.test(x)),ops=a.filter(x=>!x.startsWith('-'));if(!ops.length)r="rm: missing operand";else for(const x of ops){const p=abs(x),b=p.slice(0,p.lastIndexOf('/'))||'/',k=p.slice(p.lastIndexOf('/')+1),par=node(b),n=node(p);
+   if(!n)r+=`rm: cannot remove '${esc(x)}': No such file or directory\n`;else if(n.t==='d'&&!rec)r+=`rm: cannot remove '${esc(x)}': Is a directory\n`;else if(p===cwd||cwd.startsWith(p+'/'))r+=`rm: refusing to remove the current directory (simulated)\n`;else{delete par.c[k];state.rm.push(x+(n.t==='d'?'/':''))}}r=r.trim()}
+ else if(c==='man'){r=a[0]==='ls'?esc(MAN):a[0]?`No manual entry for ${esc(a[0])} (simulated: try man ls)`:'What manual page do you want?';if(a[0]==='ls')state.man=true}
+ else if(c==='clear'){out.innerHTML='';ps.innerHTML=prompt();check();return}
+ else if(c==='help')r='Commands: pwd  ls [-a -l -al -lh -lr -lt -lS -lR]  cd [dir|..|~]  mkdir name  touch name  rm [-r] name  man ls  clear\nTab completes names; Tab Tab lists matches.';
+ else r=`${esc(c)}: command not found`;
+ if(r)print(r);ps.innerHTML=prompt();check()}
+const CMDS=['clear','cd','help','ls','man','mkdir','pwd','rm','touch'];
+function tabInner(){const v=cmd.value,tk=v.split(' '),last=tk[tk.length-1];let cands,pre,dirPart='';
+ if(tk.length===1){pre=last;cands=CMDS.filter(x=>x.startsWith(pre)).map(x=>[x,null])}
+ else{const i=last.lastIndexOf('/');dirPart=i>=0?last.slice(0,i+1):'';pre=last.slice(i+1);const n=node(abs(dirPart||'.'));if(!n||n.t!=='d')return;
+  cands=Object.keys(n.c).filter(k=>k.startsWith(pre)&&(pre.startsWith('.')||!k.startsWith('.'))&&(tk[0]!=='cd'||n.c[k].t==='d')).sort().map(k=>[k,n.c[k]])}
+ if(!cands.length)return;const names=cands.map(x=>x[0]);let cp=names[0];for(const x of names)while(!x.startsWith(cp))cp=cp.slice(0,-1);
+ const pfx=tk.length>1?tk.slice(0,-1).join(' ')+' '+dirPart:'';
+ if(names.length===1){const e=cands[0];cmd.value=pfx+e[0]+(e[1]&&e[1].t==='d'?'/':' ');state.tabFill=true;lastTab=false}
+ else if(cp.length>pre.length){cmd.value=pfx+cp;state.tabPart=true;lastTab=false}
+ else if(lastTab){print(prompt()+esc(v));print(cands.map(([k,n])=>nm(n||{t:'f'},k)).join('  '));state.tabList=true;lastTab=false}
+ else lastTab=true}
+function tab(){tabInner();check()}
+const CH=[
+ ['Print your location','Run <code>pwd</code>',s=>s.cmds.includes('pwd')],
+ ['Show hidden files','Run <code>ls -a</code> (or <code>ls --all</code>)',s=>s.ls.some(x=>x.all)],
+ ['Long listing of everything','Run <code>ls -al</code> or <code>ls -la</code>',s=>s.ls.some(x=>x.all&&x.long)],
+ ['Human-readable sizes','Run <code>ls -lh</code> (K instead of bytes)',s=>s.ls.some(x=>x.long&&x.h)],
+ ['Sort by size','Run <code>ls -lS</code> (uppercase S)',s=>s.ls.some(x=>x.long&&x.S)],
+ ['Relative path','Run <code>cd Documents</code>, then <code>cd School/Art</code>',s=>s.cmds.includes('cd School/Art')&&s.cds.includes('/home/user/Documents/School/Art')],
+ ['Up two levels','From there run <code>cd ../..</code>',s=>s.cmds.includes('cd ../..')],
+ ['Absolute path from home','Run <code>cd ~/Documents/School/Math</code>',s=>s.cds.includes('/home/user/Documents/School/Math')],
+ ['See the case error','Run <code>cd documents</code> (lowercase) from your home directory',s=>s.cdErr],
+ ['Create a look-alike folder','Back home (<code>cd</code>), run <code>mkdir Download</code>',s=>s.cmds.some(c=>/^mkdir\s+Download$/.test(c))],
+ ['Single-Tab complete','Type <code>cd De</code> then press Tab (becomes Desktop/)',s=>s.tabFill],
+ ['Double-Tab to list matches','Type <code>cd D</code> then press Tab twice',s=>s.tabList],
+ ['Partial fill','Type <code>cd Dow</code> and press Tab — it stops where names differ',s=>s.tabPart],
+ ['Update a timestamp','Use Tab: <code>touch Download</code>, then <code>ls -lt</code> — the directory jumps to the top',s=>s.touchEx],
+ ['Make the typo','Run <code>touch download</code> (lowercase d) — no error, but a new empty file appears in <code>ls -l</code>',s=>s.touchNew],
+ ['Clean up','Run <code>rm download</code>, then <code>rm Download</code> (it fails), then <code>rm -r Download</code>',s=>s.rm.includes('download')&&s.rm.includes('Download/')],
+ ['Read the manual','Run <code>man ls</code>',s=>s.man]];
+function check(){const ul=document.getElementById('tmChal');ul.innerHTML=CH.map(([t,h,fn])=>{const ok=fn(state);return `<li class="${ok?'done':''}"><span class="tick">${ok?'✓':''}</span><span><b>${t}</b><br><span class="h">${h}</span></span></li>`}).join('');
+ const n=CH.filter(c=>c[2](state)).length;document.getElementById('tmProg').textContent=`${n} / ${CH.length} completed`+(n===CH.length?' — all done! 🎉':'')}
+function reset(){root=build();cwd=HOME;hist=[];hi=0;lastTab=false;tick=100;state={touchEx:false,touchNew:false,rm:[],cmds:[],cds:[],cdErr:false,ls:[],tabFill:false,tabList:false,tabPart:false,man:false};
+ out.innerHTML='';print('<span class="tm-dim">Welcome to the simulated Ubuntu terminal. Type <b>help</b> to start.</span>');ps.innerHTML=prompt();cmd.value='';check()}
+cmd.addEventListener('keydown',e=>{
+ if(e.key==='Tab'){e.preventDefault();tab();return}
+ if(e.key!=='Shift')lastTab=false;
+ if(e.key==='Enter'){const v=cmd.value;if(v.trim())hist.push(v);hi=hist.length;cmd.value='';run(v)}
+ else if(e.key==='ArrowUp'){e.preventDefault();if(hi>0){hi--;cmd.value=hist[hi]}}
+ else if(e.key==='ArrowDown'){e.preventDefault();if(hi<hist.length-1){hi++;cmd.value=hist[hi]}else{hi=hist.length;cmd.value=''}}
+ else if(e.key==='l'&&e.ctrlKey){e.preventDefault();out.innerHTML=''}});
+scr.addEventListener('click',()=>cmd.focus());
+document.getElementById('tmReset').addEventListener('click',reset);
+reset();
+})();
+
+</script>
+
+<button type="button" class="to-top" id="toTop" aria-label="Back to top" title="Back to top"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><path d="M6 15.5l6-6 6 6" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+
+<script>
+// ===== Back-to-top button =====
+(function(){
+  const btn = document.getElementById('toTop');
+  if(!btn) return;
+  let ticking = false;
+  function update(){
+    const y = window.pageYOffset || document.documentElement.scrollTop || 0;
+    btn.classList.toggle('show', y > 250);
+    ticking = false;
+  }
+  window.addEventListener('scroll', () => { if(!ticking){ ticking = true; requestAnimationFrame(update); } }, { passive:true });
+  window.addEventListener('resize', update);
+  btn.addEventListener('click', () => {
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    window.scrollTo({ top:0, behavior: reduce ? 'auto' : 'smooth' });
+    btn.blur();
+  });
+  update();
+})();
+</script>
+</body>
+</html>

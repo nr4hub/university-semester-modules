@@ -34,10 +34,8 @@ a{ color:inherit; }
 nav.toc.drawer-open .drawer-close{ display:flex; }
 @keyframes slideIn{ from{ transform:translateX(-100%); opacity:.4; } to{ transform:translateX(0); opacity:1; } }
 
-.hero{ background:linear-gradient(120deg,#1a73e8 0%, #7B61FF 45%, #EA4335 100%); color:#fff; padding:56px 24px 40px; position:relative; overflow:hidden; }
-.hero::after{ content:""; position:absolute; right:-60px; top:-60px; width:280px;height:280px;border-radius:50%; background:rgba(255,255,255,.08); pointer-events:none; }
-.hero::before{ content:""; position:absolute; left:10%; bottom:-120px; width:220px;height:220px;border-radius:50%; background:rgba(255,255,255,.07); pointer-events:none; }
-.hero-inner{max-width:1100px;margin:0 auto;position:relative;z-index:1;}
+.hero{ background:radial-gradient(circle 140px at calc(100% - 80px) 80px, rgba(255,255,255,.08) 99%, transparent 100%), radial-gradient(circle 110px at calc(10% + 110px) calc(100% + 10px), rgba(255,255,255,.07) 99%, transparent 100%), linear-gradient(120deg,#1a73e8 0%, #7B61FF 45%, #EA4335 100%); color:#fff; padding:56px 24px 40px; position:relative; }
+.hero-inner{max-width:1100px;margin:0 auto;position:relative;z-index:3;}
 .eyebrow{ display:inline-block; font-size:12px; letter-spacing:.14em; text-transform:uppercase; background:rgba(255,255,255,.18); padding:6px 12px; border-radius:20px; margin-bottom:18px; font-weight:500; }
 .hero h1{font-size:32px; margin:0 0 12px; font-weight:700; line-height:1.25;}
 .hero p.lead{font-size:16px; max-width:700px; opacity:.95; margin:0;}
@@ -68,7 +66,7 @@ nav.toc.drawer-open .drawer-close{ display:flex; }
 .site-search .s-dropdown{
   display:none; position:absolute; top:calc(100% + 8px); left:0; right:0;
   background:var(--paper); border:1px solid var(--line); border-radius:14px;
-  box-shadow:var(--card-shadow); max-height:320px; overflow:auto; padding:6px;
+  box-shadow:0 8px 28px rgba(0,0,0,.6); max-height:320px; overflow:auto; padding:6px; z-index:30;
 }
 .site-search .s-dropdown.show{ display:block; }
 .site-search .s-item{
@@ -82,6 +80,7 @@ nav.toc.drawer-open .drawer-close{ display:flex; }
 }
 .site-search .s-empty{ padding:14px 10px; font-size:13px; color:var(--sub); text-align:center; }
 
+#siteSearch{ z-index:5; } /* topic dropdown must overlap the 'Find on this page' box that follows it (matters on mobile where they stack) */
 .hero-find-col{ flex:1 1 300px; }
 .hero-find-col .site-search.find-page-search{ max-width:none; }
 .find-page-nav{
@@ -409,13 +408,34 @@ footer{ text-align:center; color:var(--sub); font-size:12.5px; padding:20px 0 50
 }
 @keyframes lbFade{ from{opacity:0;} to{opacity:1;} }
 @keyframes lbZoom{ from{transform:scale(.94);} to{transform:scale(1);} }
+
+/* ===== Back-to-top button (desktop + mobile) ===== */
+.to-top{ position:fixed; right:22px; bottom:22px; bottom:calc(22px + env(safe-area-inset-bottom,0px)); z-index:35; display:flex; align-items:center; justify-content:center; width:48px; height:48px; padding:0; border-radius:50%; border:1px solid #5f6368; background:#000; color:#fff; cursor:pointer; box-shadow:0 6px 20px rgba(0,0,0,.6); opacity:0; visibility:hidden; transform:translateY(14px); transition:opacity .25s ease, transform .25s ease, visibility .25s, background .15s ease; -webkit-tap-highlight-color:transparent; }
+.to-top.show{ opacity:1; visibility:visible; transform:none; }
+.to-top:hover{ background:#2c2d30; }
+.to-top:active{ transform:scale(.96); }
+@media (max-width:900px){ .to-top{ right:14px; bottom:calc(16px + env(safe-area-inset-bottom,0px)); } }
+
+/* ===== Keyboard focus (visible only for keyboard users) ===== */
+a:focus-visible, button:focus-visible, [tabindex]:focus-visible{ outline:2px solid var(--blue); outline-offset:2px; }
+button:focus:not(:focus-visible), a:focus:not(:focus-visible){ outline:none; }
+.toc-search input:focus{ border-color:var(--blue); }
+
+/* ===== Mobile: sticky top bar must not cover headings after anchor jumps ===== */
+@media (max-width:900px){ .section, .group{ scroll-margin-top:76px; } }
+
+/* ===== Respect reduced-motion setting ===== */
+@media (prefers-reduced-motion: reduce){
+  html{ scroll-behavior:auto; }
+  *,*::before,*::after{ animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; }
+}
 </style>
 </head>
 <body>
 
 <div class="mobile-bar" id="mobileBar">
   <span class="m-title">07. Emerging Technologies</span>
-  <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="toc" aria-label="Open section menu">
+  <button type="button" class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="toc" aria-label="Open section menu">
     <span></span>
   </button>
 </div>
@@ -432,7 +452,7 @@ footer{ text-align:center; color:var(--sub); font-size:12.5px; padding:20px 0 50
       <div class="site-search" id="siteSearch">
         <span class="s-icon">🔍</span>
         <input type="text" id="topicJump" placeholder="Search topics… e.g. floating point, GPU, storage" autocomplete="off">
-        <button class="s-clear" id="jumpClear" aria-label="Clear search">✕</button>
+        <button type="button" class="s-clear" id="jumpClear" aria-label="Clear search">✕</button>
         <div class="s-dropdown" id="jumpDropdown"></div>
       </div>
 
@@ -440,13 +460,13 @@ footer{ text-align:center; color:var(--sub); font-size:12.5px; padding:20px 0 50
         <div class="site-search find-page-search" id="heroFindWrap">
           <span class="s-icon">📍</span>
           <input type="text" id="heroFindInput" placeholder="Find on this page…" autocomplete="off">
-          <button class="s-clear" id="heroFindClear" aria-label="Clear search">✕</button>
+          <button type="button" class="s-clear" id="heroFindClear" aria-label="Clear search">✕</button>
         </div>
         <div class="find-page-nav" id="heroFindNav">
           <span id="heroSearchCount">0 / 0</span>
           <div class="snav-btns">
-            <button id="heroSearchPrev" aria-label="Previous match">↑</button>
-            <button id="heroSearchNext" aria-label="Next match">↓</button>
+            <button type="button" id="heroSearchPrev" aria-label="Previous match">↑</button>
+            <button type="button" id="heroSearchNext" aria-label="Next match">↓</button>
           </div>
         </div>
       </div>
@@ -461,18 +481,18 @@ footer{ text-align:center; color:var(--sub); font-size:12.5px; padding:20px 0 50
 
 <div class="layout">
   <nav class="toc" id="toc">
-    <div class="toc-head">On this page <button class="drawer-close" id="drawerClose" aria-label="Close menu">✕</button></div>
+    <div class="toc-head">On this page <button type="button" class="drawer-close" id="drawerClose" aria-label="Close menu">✕</button></div>
     <div class="toc-search">
       <div class="toc-search-box">
         <span class="s-icon">🔍</span>
         <input type="text" id="pageSearchInput" placeholder="Find on this page…" autocomplete="off">
-        <button class="s-clear" id="pageSearchClear" aria-label="Clear search">✕</button>
+        <button type="button" class="s-clear" id="pageSearchClear" aria-label="Clear search">✕</button>
       </div>
       <div class="toc-search-nav" id="searchNav">
         <span id="searchCount">0 / 0</span>
         <div class="snav-btns">
-          <button id="searchPrev" aria-label="Previous match">↑</button>
-          <button id="searchNext" aria-label="Next match">↓</button>
+          <button type="button" id="searchPrev" aria-label="Previous match">↑</button>
+          <button type="button" id="searchNext" aria-label="Next match">↓</button>
         </div>
       </div>
     </div>
@@ -508,7 +528,7 @@ footer{ text-align:center; color:var(--sub); font-size:12.5px; padding:20px 0 50
       </div>
       <div class="callout tip"><b>Exam tip:</b> Know the order — 1956 coined → 1st wave (rule-based) → Winter 1 → Expert Systems → Winter 2 → 2nd wave (ML/DL) → 2022+ mainstream adoption.</div>
     
-      <div class="si-divider"><button class="si-toggle" data-target="si-history" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
+      <div class="si-divider"><button type="button" class="si-toggle" data-target="si-history" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
       <div class="si-panel" id="si-history">
         <span class="si-label">සිංහල පරිවර්තනය</span>
         <p class="si">කෘත්‍රිම බුද්ධිය (AI) ජනප්‍රියත්වය 1956 සිට රැල්ලවල් ලෙස වර්ධනය වූ අතර, ප්‍රගතිය සහ අරමුදල් අඩු වූ <b>AI Winters</b> ලෙස හැඳින්වෙන කාල පරිච්ඡේද දෙකක් ද තිබුණි.</p>
@@ -552,7 +572,7 @@ footer{ text-align:center; color:var(--sub); font-size:12.5px; padding:20px 0 50
     
       <div class="callout tip"><b>Exam tip:</b> Memorize the 5 applications — Expert Systems, NLP, Speech Recognition, Computer Vision, Robotics — and the expert-system flow: User → User Interface → Inference Engine (reasons) ↔ Knowledge Base (stores the expert's knowledge) → Advice.</div>
     
-      <div class="si-divider"><button class="si-toggle" data-target="si-ai-basics" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
+      <div class="si-divider"><button type="button" class="si-toggle" data-target="si-ai-basics" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
       <div class="si-panel" id="si-ai-basics">
         <span class="si-label">සිංහල පරිවර්තනය</span>
         <p class="si"><b>කෘත්‍රිම බුද්ධිය (AI)</b> යනු මිනිස් බුද්ධිමත් හැසිරීම් අනුකරණය කිරීමට යන්ත්‍රවලට ඇති හැකියාවයි. එයට ඉගෙනීම, තර්ක කිරීම, ගැටලු විසඳීම සහ ස්වයං-නිවැරදි කිරීම ඇතුළත් වේ.</p>
@@ -603,7 +623,7 @@ footer{ text-align:center; color:var(--sub); font-size:12.5px; padding:20px 0 50
     
       <div class="callout tip"><b>Exam tip:</b> NLU = <i>understanding</i> language (sentiment analysis, chatbots, email filtering); NLG = <i>generating</i> language (summarization, predictive text). For CV tasks: classification = <i>what</i> is it, detection = <i>where</i> are the objects, segmentation = label <i>every pixel</i>.</div>
     
-      <div class="si-divider"><button class="si-toggle" data-target="si-nlp-cv" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
+      <div class="si-divider"><button type="button" class="si-toggle" data-target="si-nlp-cv" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
       <div class="si-panel" id="si-nlp-cv">
         <span class="si-label">සිංහල පරිවර්තනය</span>
         <p class="si"><b>NLP (Natural Language Processing)</b> හි අරමුණ මිනිසුන්ට සහ පරිගණකවලට පරිගණක භාෂාවක් වෙනුවට ඉංග්‍රීසි වැනි ස්වාභාවික භාෂාවකින් සන්නිවේදනය කිරීමට ඉඩ සැලසීමයි. එය කාණ්ඩ දෙකකි: <b>NLU</b> — යන්ත්‍රවලට මිනිස් භාෂාව තේරුම් ගැනීමට සහ අර්ථකථනය කිරීමට සලස්වයි (sentiment analysis, chatbots, email filtering). <b>NLG</b> — ස්වාභාවික, අදාළ මිනිස් වැනි භාෂාව නිපදවීමට සලස්වයි (summarization, predictive text, smart assistants, translation).</p>
@@ -634,7 +654,7 @@ footer{ text-align:center; color:var(--sub); font-size:12.5px; padding:20px 0 50
     
       <div class="callout tip"><b>Exam tip:</b> A robot = <b>senses → processes → acts</b>. Know the 5 types (Industrial, Service, Humanoids, Autonomous Vehicles, Drones) and match each AI area to its role: CV = sees, NLP = understands speech, ML = improves with experience, RL = trial and error.</div>
     
-      <div class="si-divider"><button class="si-toggle" data-target="si-robotics" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
+      <div class="si-divider"><button type="button" class="si-toggle" data-target="si-robotics" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
       <div class="si-panel" id="si-robotics">
         <span class="si-label">සිංහල පරිවර්තනය</span>
         <p class="si"><b>රොබෝවරයා</b> යනු තම පරිසරය <b>සංවේදනය</b> (sense) කරන, දත්ත <b>සකසන</b> (process) සහ භෞතික ක්‍රියා <b>සිදු කරන</b> (perform) යන්ත්‍රයකි.</p>
@@ -673,7 +693,7 @@ footer{ text-align:center; color:var(--sub); font-size:12.5px; padding:20px 0 50
     
       <div class="callout tip"><b>Exam tip:</b> AI ⊃ ML ⊃ DL. The classic question: in ML a <b>human</b> does feature extraction, in DL the <b>network</b> does it automatically (but needs big data + GPUs). Supervised = labeled data, Unsupervised = clusters/patterns, Reinforcement = rewards &amp; punishments.</div>
     
-      <div class="si-divider"><button class="si-toggle" data-target="si-aimldl" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
+      <div class="si-divider"><button type="button" class="si-toggle" data-target="si-aimldl" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
       <div class="si-panel" id="si-aimldl">
         <span class="si-label">සිංහල පරිවර්තනය</span>
         <p class="si">AI, ML සහ DL යනු පුළුල්ම සිට නිශ්චිතම දක්වා එකක් තුළ එකක් ඇති සංකල්ප තුනකි: <b>AI ⊃ ML ⊃ DL</b>. <b>AI</b> — බුද්ධිමත් හැසිරීම් අනුකරණය කරයි; <b>ML</b> — දත්ත වලින් ඉගෙන ගෙන ස්වයංක්‍රීයව වැඩිදියුණු වේ; <b>DL</b> — feature extraction සඳහා බහු-ස්ථර neural networks භාවිත කරයි.</p>
@@ -694,7 +714,7 @@ footer{ text-align:center; color:var(--sub); font-size:12.5px; padding:20px 0 50
     
       <div class="callout tip"><b>Exam tip:</b> Real systems combine several AI areas — e.g. a self-driving car = Computer Vision + Machine Learning + real-time sensors. If asked for a Deep Learning example in daily life, LLMs like ChatGPT and Gemini are the go-to answer.</div>
     
-      <div class="si-divider"><button class="si-toggle" data-target="si-real-world" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
+      <div class="si-divider"><button type="button" class="si-toggle" data-target="si-real-world" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
       <div class="si-panel" id="si-real-world">
         <span class="si-label">සිංහල පරිවර්තනය</span>
         <p class="si">සැබෑ පද්ධති බොහෝ විට AI ක්ෂේත්‍ර කිහිපයක් එකවර ඒකාබද්ධ කරයි. උදාහරණ: <b>Self-driving cars</b> — CV + ML + තත්‍ය-කාලීන සංවේදක; <b>LLMs</b> — ChatGPT, Google Gemini; <b>සෞඛ්‍ය සේවා</b> — පිළිකා වැනි රෝග සඳහා ML රෝග විනිශ්චය මෙවලම්.</p>
@@ -731,7 +751,7 @@ footer{ text-align:center; color:var(--sub); font-size:12.5px; padding:20px 0 50
     
       <div class="callout tip"><b>Exam tip:</b> Memorize the 4 stages in order: <b>Sensors → Connectivity/Gateway → Data Processing → User Interface</b>. For the warehouse example: sensors → cloud aggregator → ERP system → visual dashboard (benefit: saves time and money, improves inventory accuracy).</div>
     
-      <div class="si-divider"><button class="si-toggle" data-target="si-iot" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
+      <div class="si-divider"><button type="button" class="si-toggle" data-target="si-iot" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
       <div class="si-panel" id="si-iot">
         <span class="si-label">සිංහල පරිවර්තනය</span>
         <p class="si"><b>IoT (Internet of Things)</b> යනු සංවේදක, මෘදුකාංග සහ අනෙකුත් තාක්ෂණයන් සහිතව ඇතුළත් කළ භෞතික වස්තූන්ගේ ජාලයක් වන අතර, ඒවා අන්තර්ජාලය හෝ වෙනත් සන්නිවේදන ජාල හරහා දත්ත සම්බන්ධ කර හුවමාරු කරයි.</p>
@@ -782,7 +802,7 @@ footer{ text-align:center; color:var(--sub); font-size:12.5px; padding:20px 0 50
     
       <div class="callout tip"><b>Exam tip:</b> Remember <b>SEI</b> — Superposition, Entanglement, Interference — and the classical vs quantum contrasts: bit vs qubit, sequential vs parallel, linear vs exponential. Two facts that get asked: Google's Sycamore (2019) = quantum supremacy, and Shor's algorithm threatens RSA cryptography.</div>
     
-      <div class="si-divider"><button class="si-toggle" data-target="si-quantum" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
+      <div class="si-divider"><button type="button" class="si-toggle" data-target="si-quantum" aria-expanded="false"><span class="flag">🇱🇰</span> සිංහල <span class="arrow">▾</span></button></div>
       <div class="si-panel" id="si-quantum">
         <span class="si-label">සිංහල පරිවර්තනය</span>
         <p class="si"><b>Quantum computing</b> quantum භෞතික විද්‍යාවේ මූලධර්ම භාවිත කරයි. සම්ප්‍රදායික bits (0 හෝ 1) මෙන් නොව, quantum bits — <b>qubits</b> — එකවර දෙකම විය හැක.</p>
@@ -799,7 +819,7 @@ footer{ text-align:center; color:var(--sub); font-size:12.5px; padding:20px 0 50
     <section class="section collapsible" id="exam">
       <div class="kicker" data-toggle="exam">
         <div class="kicker-left"><div class="num-badge" style="background:var(--purple)">9</div><h2>What to Remember for the Exam</h2></div>
-        <button class="collapse-toggle" id="exam-toggle" aria-expanded="false" aria-controls="exam-body" aria-label="Expand section"><span class="chevron">▾</span></button>
+        <button type="button" class="collapse-toggle" id="exam-toggle" aria-expanded="false" aria-controls="exam-body" aria-label="Expand section"><span class="chevron">▾</span></button>
       </div>
       <div class="collapse-body" id="exam-body">
       <p class="lede">The exact facts this topic loves to test — memorize these cold.</p>
@@ -821,7 +841,7 @@ footer{ text-align:center; color:var(--sub); font-size:12.5px; padding:20px 0 50
     <section class="section collapsible" id="glossary">
       <div class="kicker" data-toggle="glossary">
         <div class="kicker-left"><div class="num-badge" style="background:#5f6368">10</div><h2>Glossary — Acronyms &amp; Meanings</h2></div>
-        <button class="collapse-toggle" id="glossary-toggle" aria-expanded="false" aria-controls="glossary-body" aria-label="Expand section"><span class="chevron">▾</span></button>
+        <button type="button" class="collapse-toggle" id="glossary-toggle" aria-expanded="false" aria-controls="glossary-body" aria-label="Expand section"><span class="chevron">▾</span></button>
       </div>
       <div class="collapse-body" id="glossary-body">
       <div class="table-wrap">
@@ -851,7 +871,7 @@ footer{ text-align:center; color:var(--sub); font-size:12.5px; padding:20px 0 50
     <section class="section collapsible" id="comparison">
       <div class="kicker" data-toggle="comparison">
         <div class="kicker-left"><div class="num-badge" style="background:#5f6368">11</div><h2>Comparison Tables</h2></div>
-        <button class="collapse-toggle" id="comparison-toggle" aria-expanded="false" aria-controls="comparison-body" aria-label="Expand section"><span class="chevron">▾</span></button>
+        <button type="button" class="collapse-toggle" id="comparison-toggle" aria-expanded="false" aria-controls="comparison-body" aria-label="Expand section"><span class="chevron">▾</span></button>
       </div>
       <div class="collapse-body" id="comparison-body">
 
@@ -903,7 +923,7 @@ footer{ text-align:center; color:var(--sub); font-size:12.5px; padding:20px 0 50
           <div class="num-badge" style="background:linear-gradient(135deg,#34A853,#1a73e8)">12</div>
           <h2>🇱🇰 Sinhala Vocabulary — පාඩමෙහි දුෂ්කර වචන</h2>
         </div>
-        <button class="collapse-toggle" id="sinhala-vocab-toggle" aria-expanded="false" aria-controls="sinhala-vocab-body" aria-label="Expand section"><span class="chevron">▾</span></button>
+        <button type="button" class="collapse-toggle" id="sinhala-vocab-toggle" aria-expanded="false" aria-controls="sinhala-vocab-body" aria-label="Expand section"><span class="chevron">▾</span></button>
       </div>
       <div class="collapse-body" id="sinhala-vocab-body">
       <p class="lede" style="margin-bottom:22px;">This lesson's difficult English words — with Sinhala meanings and example sentences from daily life, AI/tech, and general fields.</p>
@@ -1053,20 +1073,20 @@ footer{ text-align:center; color:var(--sub); font-size:12.5px; padding:20px 0 50
     <section class="section collapsible" id="mcq-practice">
       <div class="kicker" data-toggle="mcq-practice">
         <div class="kicker-left"><div class="num-badge" style="background:var(--red)">13</div><h2>📝 MCQ Practice Test — 80 Questions</h2></div>
-        <button class="collapse-toggle" id="mcq-practice-toggle" aria-expanded="false" aria-controls="mcq-practice-body" aria-label="Expand section"><span class="chevron">▾</span></button>
+        <button type="button" class="collapse-toggle" id="mcq-practice-toggle" aria-expanded="false" aria-controls="mcq-practice-body" aria-label="Expand section"><span class="chevron">▾</span></button>
       </div>
       <div class="collapse-body" id="mcq-practice-body">
       <p class="lede">The module's final assessment is a <b>Multiple Choice online class test (1 hour, 50% weighting)</b> — so practice in that exact format. 80 hard, exam-style MCQs covering every section of this lesson equally (10 per section). Click an option to check it; only one attempt is scored per question.</p>
       <div class="mcq-quiz-header">
         <span id="mcqScore">Score: 0 / 80</span>
-        <button class="mcq-reset-btn" id="mcqReset">↺ Reset Quiz</button>
+        <button type="button" class="mcq-reset-btn" id="mcqReset">↺ Reset Quiz</button>
       </div>
       <div id="mcqContainer"></div>
       </div>
     </section>
 
     <footer>Computer Architecture &amp; Operating Systems Design — Neroshana Gunasekara · COMP40050
-      <br><a class="back-top" href="#toc">Back to top ↑</a>
+      <br><a class="back-top" href="#top">Back to top ↑</a>
     </footer>
   </main>
 </div>
@@ -1678,9 +1698,9 @@ footer{ text-align:center; color:var(--sub); font-size:12.5px; padding:20px 0 50
   const overlay = document.createElement('div');
   overlay.className = 'lb-overlay';
   overlay.setAttribute('role','dialog'); overlay.setAttribute('aria-modal','true'); overlay.setAttribute('aria-label','Enlarged image');
-  overlay.innerHTML = '<button class="lb-close" aria-label="Close image">&times;</button>' +
-    '<button class="lb-nav lb-prev" aria-label="Previous image">&#8249;</button>' +
-    '<button class="lb-nav lb-next" aria-label="Next image">&#8250;</button>' +
+  overlay.innerHTML = '<button type="button" class="lb-close" aria-label="Close image">&times;</button>' +
+    '<button type="button" class="lb-nav lb-prev" aria-label="Previous image">&#8249;</button>' +
+    '<button type="button" class="lb-nav lb-next" aria-label="Next image">&#8250;</button>' +
     '<img alt=""><div class="lb-caption"></div><div class="lb-count"></div>';
   document.body.appendChild(overlay);
   const bigImg = overlay.querySelector('img');
@@ -1732,6 +1752,30 @@ footer{ text-align:center; color:var(--sub); font-size:12.5px; padding:20px 0 50
   });
   // ignore the synthetic click that follows a swipe so it doesn't close the viewer
   overlay.addEventListener('click', e => { if(overlay._swiped){ e.stopImmediatePropagation(); } }, true);
+})();
+</script>
+
+<button type="button" class="to-top" id="toTop" aria-label="Back to top" title="Back to top"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><path d="M6 15.5l6-6 6 6" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+
+<script>
+// ===== Back-to-top button =====
+(function(){
+  const btn = document.getElementById('toTop');
+  if(!btn) return;
+  let ticking = false;
+  function update(){
+    const y = window.pageYOffset || document.documentElement.scrollTop || 0;
+    btn.classList.toggle('show', y > 250);
+    ticking = false;
+  }
+  window.addEventListener('scroll', () => { if(!ticking){ ticking = true; requestAnimationFrame(update); } }, { passive:true });
+  window.addEventListener('resize', update);
+  btn.addEventListener('click', () => {
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    window.scrollTo({ top:0, behavior: reduce ? 'auto' : 'smooth' });
+    btn.blur();
+  });
+  update();
 })();
 </script>
 </body>
